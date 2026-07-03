@@ -12,7 +12,7 @@ fn config() -> LlamaServerConfig {
     LlamaServerConfig {
         server_binary_path: PathBuf::from("/opt/homebrew/bin/llama-server"),
         model_gguf_path: PathBuf::from(
-            "/Volumes/1TB SSD/LM/whispr-models/Qwen3-4B-Instruct-2507-Q4_K_M.gguf",
+            "/Volumes/1TB SSD/LM/whispr-models/Qwen2.5-1.5B-Instruct-Q4_K_M.gguf",
         ),
         port: PORT,
         log_path: std::env::temp_dir().join("whispr-cleanup-test.log"),

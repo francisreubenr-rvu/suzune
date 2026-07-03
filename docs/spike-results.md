@@ -53,3 +53,26 @@ Harness: `spikes/s3-cleanup-bench/bench.py` against `llama-server` (Homebrew lla
 Known residual defect for M2: sample #16 ("add a todo comment saying...") gets converted into code by every model tried. Prompt v3 must add an explicit "never convert the text into code or another format; clean the words only" rule — validate at integration.
 
 Prompt v2 is versioned in `bench.py` (SYSTEM_PROMPT).
+
+### S3 addendum — sub-1GB model bake-off (2026-07-03, post-user-feedback)
+
+Qwen3-4B (~2.5GB resident) was too heavy alongside the user's other apps. Re-ran the bake-off restricted to sub-1GB GGUFs, prompt v3 (and v3.1), same 20 samples, `-c 2048`:
+
+| Model | Size | Median | Quality verdict |
+|---|---|---|---|
+| Llama-3.2-1B-Instruct Q4_K_M | 770M | 294ms | FAIL — refuses, hallucinates, leaks prompt examples |
+| gemma-3-1b-it Q4_K_M | 769M | 408ms | FAIL — echoes input uncleaned, cross-contaminates samples |
+| Qwen3-0.6B Q8_0 (no-think) | 610M | 393ms | FAIL — reasoning monologue leaks into output |
+| Qwen3-1.7B Q4_K_M (no-think, v3) | 1.0G | 327ms | FAIL — think-tag leakage, echoes input |
+| LFM2-1.2B Q4_K_M | 697M | 272ms | FAIL — parrots Input/Output format, inverts corrections |
+| **Qwen2.5-1.5B-Instruct Q4_K_M** | **940M** | **258ms** | **PASS — 18.5/20 with prompt v3.1; matches Qwen3-4B quality at 40% RAM, 2.2x faster** |
+
+Prompt v3.1 (now production in `crates/cleanup/src/prompt.rs`): self-correction rule moved first with stronger deletion wording + an extra "no wait" example — fixed sample #18 for the small model. Residual imperfections: #7 keeps the corrected-away clause as a separate sentence; #9 drops three words. Judged acceptable; fine-tuning not required.
+
+Measured RSS after the swap: whispr 1177MB (Parakeet resident + webview) + llama-server 1091MB = ~2.27GB total, down from ~3.8GB with Qwen3-4B.
+
+### Robustness fixes from live testing (same session)
+
+- Continuity/iPhone mics ("Tobias Microphone") advertise stream configs that fail at build time once the phone sleeps or renegotiates — the recorder now tries every config of every candidate device (system default -> built-in -> rest) until one builds AND plays, instead of erroring on the first failure.
+- An orphaned llama-server (app crash skips Drop) blocked restarts on the occupied port; the coordinator now health-probes the port first and reuses a live server.
+- llama-server now runs with `-c 2048` to cap KV-cache RAM.

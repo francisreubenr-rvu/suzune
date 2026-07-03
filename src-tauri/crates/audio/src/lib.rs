@@ -112,11 +112,6 @@ impl Recorder {
     }
 
     fn open_device(&mut self) -> Result<()> {
-        let host = cpal::default_host();
-        let device = host
-            .default_input_device()
-            .ok_or_else(|| anyhow!("no input microphone found"))?;
-
         let (raw_tx, raw_rx) = mpsc::channel::<RawChunk>();
         let (cmd_tx, cmd_rx) = mpsc::channel::<Cmd>();
         let (init_tx, init_rx) = mpsc::sync_channel::<Result<(), String>>(1);
@@ -126,34 +121,30 @@ impl Recorder {
             let stop_flag = Arc::new(AtomicBool::new(false));
             let stream_stop_flag = stop_flag.clone();
 
+            // The default device can advertise configs that fail at
+            // build time (Continuity/Bluetooth mics that have gone
+            // away or renegotiated). Try every candidate device until
+            // one actually yields a playing stream.
             let init_result = (|| -> Result<(cpal::Stream, u32), String> {
-                let config =
-                    preferred_input_config(&device).map_err(|e| format!("{e:#}"))?;
-                let in_rate = config.sample_rate().0;
-                let channels = config.channels() as usize;
-
-                log::info!(
-                    "whispr-audio: device={:?} rate={} channels={} format={:?}",
-                    device.name(),
-                    in_rate,
-                    channels,
-                    config.sample_format()
-                );
-
-                let stream = build_input_stream(
-                    &device,
-                    &config,
-                    raw_tx,
-                    channels,
-                    stream_stop_flag,
-                )
-                .map_err(|e| format!("failed to build input stream: {e}"))?;
-
-                stream
-                    .play()
-                    .map_err(|e| format!("failed to start microphone stream: {e}"))?;
-
-                Ok((stream, in_rate))
+                let host = cpal::default_host();
+                let mut last_err = "no input microphone found".to_string();
+                for device in candidate_devices(&host) {
+                    match try_open_stream(
+                        &device,
+                        raw_tx.clone(),
+                        stream_stop_flag.clone(),
+                    ) {
+                        Ok(ok) => return Ok(ok),
+                        Err(e) => {
+                            log::warn!(
+                                "whispr-audio: device {:?} unusable: {e}",
+                                device.name()
+                            );
+                            last_err = e;
+                        }
+                    }
+                }
+                Err(last_err)
             })();
 
             match init_result {
@@ -216,6 +207,91 @@ fn classify_device_error(msg: &str) -> anyhow::Error {
     } else {
         anyhow!("microphone error: {msg}")
     }
+}
+
+/// Candidate input devices in preference order: system default first,
+/// then the built-in microphone (the device most likely to actually
+/// work when an external/Continuity mic has gone away), then the rest.
+fn candidate_devices(host: &cpal::Host) -> Vec<Device> {
+    let default_name = host
+        .default_input_device()
+        .and_then(|d| d.name().ok())
+        .unwrap_or_default();
+    let mut default_dev = Vec::new();
+    let mut builtin = Vec::new();
+    let mut rest = Vec::new();
+    let iter = match host.input_devices() {
+        Ok(it) => it,
+        Err(e) => {
+            log::warn!("whispr-audio: could not enumerate input devices: {e}");
+            return host.default_input_device().into_iter().collect();
+        }
+    };
+    for device in iter {
+        let name = device.name().unwrap_or_default();
+        if name == default_name {
+            default_dev.push(device);
+        } else if name.to_lowercase().contains("macbook") || name.to_lowercase().contains("built-in")
+        {
+            builtin.push(device);
+        } else {
+            rest.push(device);
+        }
+    }
+    default_dev.into_iter().chain(builtin).chain(rest).collect()
+}
+
+/// Try the device's preferred config first, then its default config,
+/// then every supported config range at its max rate, until one both
+/// builds and plays.
+fn try_open_stream(
+    device: &Device,
+    raw_tx: mpsc::Sender<RawChunk>,
+    stop_flag: Arc<AtomicBool>,
+) -> Result<(cpal::Stream, u32), String> {
+    let mut configs: Vec<cpal::SupportedStreamConfig> = Vec::new();
+    if let Ok(c) = preferred_input_config(device) {
+        configs.push(c);
+    }
+    if let Ok(c) = device.default_input_config() {
+        if !configs.iter().any(|x| x == &c) {
+            configs.push(c);
+        }
+    }
+    if let Ok(ranges) = device.supported_input_configs() {
+        for r in ranges {
+            let c = r.with_max_sample_rate();
+            if !configs.iter().any(|x| x == &c) {
+                configs.push(c);
+            }
+        }
+    }
+    if configs.is_empty() {
+        return Err("device reports no usable input configs".to_string());
+    }
+
+    let mut last_err = String::new();
+    for config in configs {
+        let in_rate = config.sample_rate().0;
+        let channels = config.channels() as usize;
+        match build_input_stream(device, &config, raw_tx.clone(), channels, stop_flag.clone()) {
+            Ok(stream) => match stream.play() {
+                Ok(()) => {
+                    log::info!(
+                        "whispr-audio: device={:?} rate={} channels={} format={:?}",
+                        device.name(),
+                        in_rate,
+                        channels,
+                        config.sample_format()
+                    );
+                    return Ok((stream, in_rate));
+                }
+                Err(e) => last_err = format!("failed to start microphone stream: {e}"),
+            },
+            Err(e) => last_err = format!("failed to build input stream: {e}"),
+        }
+    }
+    Err(last_err)
 }
 
 /// Pick the device's native/default sample rate and best available sample

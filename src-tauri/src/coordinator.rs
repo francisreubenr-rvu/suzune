@@ -113,10 +113,16 @@ impl Worker {
         if !self.settings.cleanup_enabled {
             return;
         }
-        let gguf = self
-            .settings
-            .models_root
-            .join("Qwen3-4B-Instruct-2507-Q4_K_M.gguf");
+        let base_url = format!("http://127.0.0.1:{}", self.settings.cleanup_port);
+        let probe = CleanupClient::new(&base_url);
+        if probe.is_healthy() {
+            // A server from a previous run (or user-managed Ollama-style
+            // setup) is already on the port — reuse it instead of failing.
+            log::info!("reusing existing cleanup server on port {}", self.settings.cleanup_port);
+            self.cleanup = Some(probe);
+            return;
+        }
+        let gguf = self.settings.models_root.join(&self.settings.cleanup_model);
         let log_path = std::env::temp_dir().join("whispr-llama-server.log");
         match LlamaServer::spawn(LlamaServerConfig {
             server_binary_path: self.settings.llama_server_path.clone(),
@@ -125,10 +131,7 @@ impl Worker {
             log_path,
         }) {
             Ok(server) => {
-                self.cleanup = Some(CleanupClient::new(&format!(
-                    "http://127.0.0.1:{}",
-                    self.settings.cleanup_port
-                )));
+                self.cleanup = Some(CleanupClient::new(&base_url));
                 self._llama = Some(server);
                 log::info!("cleanup server up on port {}", self.settings.cleanup_port);
             }

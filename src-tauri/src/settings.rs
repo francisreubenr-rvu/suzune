@@ -14,6 +14,8 @@ pub struct Settings {
     pub push_to_talk: bool,
     /// Run the transcript through the local cleanup LLM before injecting.
     pub cleanup_enabled: bool,
+    /// Cleanup model GGUF filename, resolved under `models_root`.
+    pub cleanup_model: String,
     /// llama-server binary for the cleanup layer.
     pub llama_server_path: PathBuf,
     /// Port the embedded llama-server listens on (localhost only).
@@ -27,6 +29,7 @@ impl Default for Settings {
             shortcut: "alt+space".to_string(),
             push_to_talk: true,
             cleanup_enabled: true,
+            cleanup_model: "Qwen2.5-1.5B-Instruct-Q4_K_M.gguf".to_string(),
             llama_server_path: PathBuf::from("/opt/homebrew/bin/llama-server"),
             cleanup_port: 8542,
         }

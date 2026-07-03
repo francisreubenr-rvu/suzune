@@ -66,6 +66,10 @@ impl LlamaServer {
             .arg(config.port.to_string())
             .arg("-ngl")
             .arg("99")
+            // Small context: system prompt + one utterance. Caps the KV
+            // cache so the cleanup layer stays light in RAM.
+            .arg("-c")
+            .arg("2048")
             .stdout(Stdio::from(log_out))
             .stderr(Stdio::from(log_err))
             .spawn()

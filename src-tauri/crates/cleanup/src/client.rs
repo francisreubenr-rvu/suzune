@@ -27,6 +27,17 @@ impl CleanupClient {
         CleanupClient { base_url }
     }
 
+    /// True if a llama-server (or compatible) is already healthy at
+    /// `base_url`. Lets the app reuse a server left over from a previous
+    /// run instead of failing on the occupied port.
+    pub fn is_healthy(&self) -> bool {
+        ureq::get(&format!("{}/health", self.base_url))
+            .timeout(std::time::Duration::from_secs(1))
+            .call()
+            .map(|r| r.status() == 200)
+            .unwrap_or(false)
+    }
+
     /// Send `raw_transcript` through the cleanup system prompt and return the
     /// cleaned, trimmed text.
     pub fn clean(&self, raw_transcript: &str) -> Result<String> {
