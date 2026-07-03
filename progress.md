@@ -6,8 +6,8 @@ Local-first, open-source alternative to Wispr Flow. Multi-session project; this 
 
 | Phase | Status | Output |
 |---|---|---|
-| 1. Research (Wispr Flow teardown, complaints, local ASR stacks) | IN PROGRESS — 3 Sonnet agents launched 2026-07-03 | docs/findings.md (Opus synthesis) |
-| 2. Planning | not started — blocked on phase 1 | implementation_plan.md (requires user approval before phase 3) |
+| 1. Research (Wispr Flow teardown, complaints, local ASR stacks) | DONE 2026-07-03 — 3 reports + docs/findings.md | docs/ |
+| 2. Planning | DONE 2026-07-03 — AWAITING USER APPROVAL of implementation_plan.md (decisions D1-D5) | implementation_plan.md |
 | 3. Implementation | not started — blocked on user approval of plan | app code in this repo |
 | 4. Landing page | not started | separate directory/branch |
 | 5. Demo video + LinkedIn post | not started | — |

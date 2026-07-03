@@ -2,15 +2,97 @@
   "project": "whispr",
   "updated": "2026-07-03",
   "tasks": [
-    { "id": "P1-research-architecture", "phase": 1, "title": "Research Wispr Flow architecture: capture pipeline, ASR backend, text injection, latency", "status": "done", "owner": "sonnet-agent-A", "output": "docs/research-architecture.md" },
-    { "id": "P1-research-complaints", "phase": 1, "title": "Research Wispr Flow limitations, user complaints, competitor landscape", "status": "done", "owner": "sonnet-agent-B", "output": "docs/research-complaints.md" },
-    { "id": "P1-research-local-asr", "phase": 1, "title": "Research local ASR stacks (whisper.cpp, faster-whisper, Moonshine, Parakeet, MLX) + study repos/Handy source", "status": "done", "owner": "sonnet-agent-C", "output": "docs/research-local-asr.md" },
-    { "id": "P1-synthesize", "phase": 1, "title": "Opus synthesis of research into docs/findings.md", "status": "in_progress", "owner": "opus", "blockedBy": ["P1-research-architecture", "P1-research-complaints", "P1-research-local-asr"] },
-    { "id": "P2-plan", "phase": 2, "title": "Write implementation_plan.md (model selection, architecture, improvements over Wispr Flow, parallel task breakdown)", "status": "pending", "blockedBy": ["P1-synthesize"] },
-    { "id": "P2-approval", "phase": 2, "title": "USER GATE: approve implementation_plan.md", "status": "pending", "blockedBy": ["P2-plan"] },
-    { "id": "P3-implementation", "phase": 3, "title": "Implement whispr per approved plan (task breakdown to be expanded from plan)", "status": "pending", "blockedBy": ["P2-approval"] },
-    { "id": "P4-landing-page", "phase": 4, "title": "3D animated marketing landing page (separate dir/branch)", "status": "pending", "blockedBy": ["P2-approval"] },
-    { "id": "P5-demo-video", "phase": 5, "title": "Demo video of whispr in use", "status": "pending", "blockedBy": ["P3-implementation"] },
-    { "id": "P5-linkedin-post", "phase": 5, "title": "LinkedIn announcement post", "status": "pending", "blockedBy": ["P3-implementation"] }
+    {
+      "id": "P1-research-architecture",
+      "phase": 1,
+      "title": "Research Wispr Flow architecture: capture pipeline, ASR backend, text injection, latency",
+      "status": "done",
+      "owner": "sonnet-agent-A",
+      "output": "docs/research-architecture.md"
+    },
+    {
+      "id": "P1-research-complaints",
+      "phase": 1,
+      "title": "Research Wispr Flow limitations, user complaints, competitor landscape",
+      "status": "done",
+      "owner": "sonnet-agent-B",
+      "output": "docs/research-complaints.md"
+    },
+    {
+      "id": "P1-research-local-asr",
+      "phase": 1,
+      "title": "Research local ASR stacks (whisper.cpp, faster-whisper, Moonshine, Parakeet, MLX) + study repos/Handy source",
+      "status": "done",
+      "owner": "sonnet-agent-C",
+      "output": "docs/research-local-asr.md"
+    },
+    {
+      "id": "P1-synthesize",
+      "phase": 1,
+      "title": "Opus synthesis of research into docs/findings.md",
+      "status": "done",
+      "owner": "opus",
+      "blockedBy": [
+        "P1-research-architecture",
+        "P1-research-complaints",
+        "P1-research-local-asr"
+      ],
+      "output": "docs/findings.md"
+    },
+    {
+      "id": "P2-plan",
+      "phase": 2,
+      "title": "Write implementation_plan.md (model selection, architecture, improvements over Wispr Flow, parallel task breakdown)",
+      "status": "done",
+      "blockedBy": [
+        "P1-synthesize"
+      ],
+      "output": "implementation_plan.md"
+    },
+    {
+      "id": "P2-approval",
+      "phase": 2,
+      "title": "USER GATE: approve implementation_plan.md",
+      "status": "awaiting_user",
+      "blockedBy": [
+        "P2-plan"
+      ]
+    },
+    {
+      "id": "P3-implementation",
+      "phase": 3,
+      "title": "Implement whispr per approved plan (task breakdown to be expanded from plan)",
+      "status": "pending",
+      "blockedBy": [
+        "P2-approval"
+      ]
+    },
+    {
+      "id": "P4-landing-page",
+      "phase": 4,
+      "title": "3D animated marketing landing page (separate dir/branch)",
+      "status": "pending",
+      "blockedBy": [
+        "P2-approval"
+      ]
+    },
+    {
+      "id": "P5-demo-video",
+      "phase": 5,
+      "title": "Demo video of whispr in use",
+      "status": "pending",
+      "blockedBy": [
+        "P3-implementation"
+      ]
+    },
+    {
+      "id": "P5-linkedin-post",
+      "phase": 5,
+      "title": "LinkedIn announcement post",
+      "status": "pending",
+      "blockedBy": [
+        "P3-implementation"
+      ]
+    }
   ]
 }
