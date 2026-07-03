@@ -117,8 +117,8 @@ pub fn run() {
                 std::thread::spawn(move || {
                     std::thread::sleep(std::time::Duration::from_secs(25));
                     handle.state::<Coordinator>().send(Command::StartRecording);
-                    std::thread::sleep(std::time::Duration::from_secs(5));
-                    handle.state::<Coordinator>().send(Command::Cancel);
+                    std::thread::sleep(std::time::Duration::from_secs(6));
+                    handle.state::<Coordinator>().send(Command::StopAndProcess);
                 });
             }
 

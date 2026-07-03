@@ -8,6 +8,10 @@ use std::path::PathBuf;
 pub struct Settings {
     /// Directory holding ASR/VAD/LLM model files.
     pub models_root: PathBuf,
+    /// Exact input-device name to pin (None = system default with
+    /// fallback). Pinning defeats macOS Continuity silently re-grabbing
+    /// the default mic for a nearby iPhone.
+    pub input_device: Option<String>,
     /// Global dictation shortcut (tauri-plugin-global-shortcut syntax).
     pub shortcut: String,
     /// `true`: hold to talk, release to transcribe. `false`: press toggles.
@@ -26,6 +30,7 @@ impl Default for Settings {
     fn default() -> Self {
         Settings {
             models_root: PathBuf::from("/Volumes/1TB SSD/LM/whispr-models"),
+            input_device: None,
             shortcut: "alt+space".to_string(),
             push_to_talk: true,
             cleanup_enabled: true,

@@ -56,6 +56,7 @@ pub struct Recorder {
     worker: Option<JoinHandle<()>>,
     frame_tx: crossbeam_channel::Sender<Vec<f32>>,
     frame_rx: crossbeam_channel::Receiver<Vec<f32>>,
+    preferred_device: Option<String>,
 }
 
 impl Recorder {
@@ -64,12 +65,21 @@ impl Recorder {
     /// constructing a `Recorder` can never fail due to missing hardware or
     /// denied permissions.
     pub fn new() -> Self {
+        Self::with_preferred_device(None)
+    }
+
+    /// Like [`Recorder::new`], but tries the named input device first —
+    /// pinning a mic regardless of the system default (macOS Continuity
+    /// silently re-grabs the default for a nearby iPhone). Falls back to
+    /// the usual candidate order if the named device is absent or broken.
+    pub fn with_preferred_device(preferred_device: Option<String>) -> Self {
         let (frame_tx, frame_rx) = crossbeam_channel::unbounded();
         Recorder {
             cmd_tx: None,
             worker: None,
             frame_tx,
             frame_rx,
+            preferred_device,
         }
     }
 
@@ -116,6 +126,7 @@ impl Recorder {
         let (cmd_tx, cmd_rx) = mpsc::channel::<Cmd>();
         let (init_tx, init_rx) = mpsc::sync_channel::<Result<(), String>>(1);
         let frame_tx = self.frame_tx.clone();
+        let preferred = self.preferred_device.clone();
 
         let worker = std::thread::spawn(move || {
             let stop_flag = Arc::new(AtomicBool::new(false));
@@ -128,7 +139,7 @@ impl Recorder {
             let init_result = (|| -> Result<(cpal::Stream, u32), String> {
                 let host = cpal::default_host();
                 let mut last_err = "no input microphone found".to_string();
-                for device in candidate_devices(&host) {
+                for device in candidate_devices(&host, preferred.as_deref()) {
                     match try_open_stream(
                         &device,
                         raw_tx.clone(),
@@ -209,14 +220,16 @@ fn classify_device_error(msg: &str) -> anyhow::Error {
     }
 }
 
-/// Candidate input devices in preference order: system default first,
-/// then the built-in microphone (the device most likely to actually
-/// work when an external/Continuity mic has gone away), then the rest.
-fn candidate_devices(host: &cpal::Host) -> Vec<Device> {
+/// Candidate input devices in preference order: the user-pinned device
+/// (if any) first, then the system default, then the built-in microphone
+/// (the device most likely to actually work when an external/Continuity
+/// mic has gone away), then the rest.
+fn candidate_devices(host: &cpal::Host, preferred: Option<&str>) -> Vec<Device> {
     let default_name = host
         .default_input_device()
         .and_then(|d| d.name().ok())
         .unwrap_or_default();
+    let mut pinned = Vec::new();
     let mut default_dev = Vec::new();
     let mut builtin = Vec::new();
     let mut rest = Vec::new();
@@ -229,7 +242,9 @@ fn candidate_devices(host: &cpal::Host) -> Vec<Device> {
     };
     for device in iter {
         let name = device.name().unwrap_or_default();
-        if name == default_name {
+        if Some(name.as_str()) == preferred {
+            pinned.push(device);
+        } else if name == default_name {
             default_dev.push(device);
         } else if name.to_lowercase().contains("macbook") || name.to_lowercase().contains("built-in")
         {
@@ -238,7 +253,15 @@ fn candidate_devices(host: &cpal::Host) -> Vec<Device> {
             rest.push(device);
         }
     }
-    default_dev.into_iter().chain(builtin).chain(rest).collect()
+    if preferred.is_some() && pinned.is_empty() {
+        log::warn!("whispr-audio: preferred device {:?} not found, using fallback order", preferred);
+    }
+    pinned
+        .into_iter()
+        .chain(default_dev)
+        .chain(builtin)
+        .chain(rest)
+        .collect()
 }
 
 /// Try the device's preferred config first, then its default config,

@@ -152,7 +152,8 @@ impl Worker {
         if matches!(self.phase, Phase::Recording(_)) {
             return; // key auto-repeat / double press
         }
-        let mut recorder = Recorder::new();
+        let mut recorder =
+            Recorder::with_preferred_device(self.settings.input_device.clone());
         match recorder.start() {
             Ok(()) => {
                 self.phase = Phase::Recording(recorder);
@@ -187,6 +188,7 @@ impl Worker {
         if audio.len() < whispr_audio::FRAME_SAMPLES * 10 {
             return Ok(None); // <300ms: accidental tap
         }
+        let peak = audio.iter().fold(0.0f32, |m, s| m.max(s.abs()));
         let engine = self
             .engine
             .as_mut()
@@ -201,7 +203,13 @@ impl Worker {
         };
         let raw = transcript.text.trim().to_string();
         if raw.is_empty() {
-            return Ok(None);
+            // Silence in, nothing out — tell the user instead of vanishing.
+            // A near-zero peak means the mic heard nothing (wrong device,
+            // muted, or a Continuity mic in another room).
+            anyhow::bail!(
+                "didn't catch any speech{}",
+                if peak < 0.005 { " — check your microphone" } else { "" }
+            );
         }
         let text = match &self.cleanup {
             Some(client) => match client.clean(&raw) {
