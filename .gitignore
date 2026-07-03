@@ -24,3 +24,5 @@ dist-ssr
 *.sw?
 .cargo/config.toml
 dist/
+spikes/**/results-*.jsonl
+spikes/**/samples/*.wav

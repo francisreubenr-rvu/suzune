@@ -53,7 +53,7 @@
       "id": "P2-approval",
       "phase": 2,
       "title": "USER GATE: approve implementation_plan.md",
-      "status": "awaiting_user",
+      "status": "done",
       "blockedBy": [
         "P2-plan"
       ]
@@ -62,7 +62,7 @@
       "id": "P3-implementation",
       "phase": 3,
       "title": "Implement whispr per approved plan (task breakdown to be expanded from plan)",
-      "status": "pending",
+      "status": "in_progress",
       "blockedBy": [
         "P2-approval"
       ]
@@ -93,6 +93,37 @@
       "blockedBy": [
         "P3-implementation"
       ]
+    },
+    {
+      "id": "P3-M0-scaffold",
+      "phase": 3,
+      "title": "M0: Tauri 2 scaffold + toolchain + spikes S1-S3",
+      "status": "done",
+      "output": "docs/spike-results.md"
+    },
+    {
+      "id": "P3-M1-pipeline",
+      "phase": 3,
+      "title": "M1: headless core pipeline (hotkey -> capture -> VAD -> ASR -> stdout)",
+      "status": "pending"
+    },
+    {
+      "id": "P3-M2-inject-cleanup",
+      "phase": 3,
+      "title": "M2: injection + coordinator + LLM cleanup wired",
+      "status": "pending"
+    },
+    {
+      "id": "P3-M3-ui",
+      "phase": 3,
+      "title": "M3: paperback UI - settings, overlay, model manager, history",
+      "status": "pending"
+    },
+    {
+      "id": "P3-M4-polish",
+      "phase": 3,
+      "title": "M4: polish, README, GitHub push (private)",
+      "status": "pending"
     }
   ]
 }

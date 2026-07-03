@@ -1,0 +1,9 @@
+[package]
+name = "s1-asr-bench"
+version = "0.1.0"
+edition = "2021"
+
+[dependencies]
+transcribe-rs = { version = "0.3.8", features = ["whisper-metal", "onnx"] }
+hound = "3.5.1"
+anyhow = "1.0"

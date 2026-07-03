@@ -1,0 +1,20 @@
+{"id": 1, "input": "um so basically I think we should uh move the meeting to thursday because uh wednesday is is packed for me", "expect": "fillers removed, punctuation, capitalization; meaning unchanged"}
+{"id": 2, "input": "send the invoice by 5pm actually no 6pm and cc the finance team", "expect": "self-correction resolved to 6pm"}
+{"id": 3, "input": "hey sarah just wanted to check in on the uh the design review are we still on for tomorrow", "expect": "casual message cleaned, question mark added"}
+{"id": 4, "input": "the three main risks are um latency second is memory usage and uh third the licensing situation", "expect": "list structure recovered or clean sentence; no invented content"}
+{"id": 5, "input": "i i think the the problem is that we never actually tested it on real hardware", "expect": "stutter repetitions removed"}
+{"id": 6, "input": "can you grab milk eggs uh bread and and maybe some coffee from the store", "expect": "fillers removed, list intact, nothing added"}
+{"id": 7, "input": "the function should return null wait no it should throw an exception when the input is empty", "expect": "self-correction resolved to throw an exception"}
+{"id": 8, "input": "dear mr thompson thank you for your email regarding the um the contract renewal we will review it and get back to you by friday", "expect": "formal email register kept, proper capitalization"}
+{"id": 9, "input": "so the way it works is you press the hotkey you speak and then um the text just appears wherever your cursor is", "expect": "clean explanatory sentence, 'so' opener may be dropped"}
+{"id": 10, "input": "remind me to call the dentist tomorrow at uh at nine thirty am", "expect": "time normalized (9:30 am acceptable), fillers gone"}
+{"id": 11, "input": "the quarterly numbers look good revenue is up twelve percent but um churn increased slightly to four point two percent", "expect": "percentages as digits acceptable; no invented numbers"}
+{"id": 12, "input": "okay so next steps first we finalize the schema then we uh write the migration and finally we deploy to staging", "expect": "sequence kept in order, fillers removed"}
+{"id": 13, "input": "i disagree with the proposal not because its wrong but because um the timing is off", "expect": "apostrophe fixed (it's), meaning preserved exactly"}
+{"id": 14, "input": "lets meet at the coffee place on fifth avenue you know the one with the with the green awning", "expect": "repetition removed, let's fixed"}
+{"id": 15, "input": "the patient reported mild headaches for uh three days no fever no nausea", "expect": "clinical tone preserved, nothing embellished"}
+{"id": 16, "input": "add a todo comment above the parse function saying this needs error handling for malformed json", "expect": "instruction preserved verbatim in intent; JSON casing acceptable"}
+{"id": 17, "input": "um yeah no i think thats actually a really good point lets go with your approach", "expect": "'um yeah no' collapsed to agreement, that's fixed"}
+{"id": 18, "input": "book two tickets for the seven pm show no wait the nine pm one and aisle seats if possible", "expect": "self-correction resolved to 9 pm"}
+{"id": 19, "input": "the deadline is march fifteenth twenty twenty seven which gives us about nine months", "expect": "date normalized (March 15, 2027 acceptable); arithmetic not second-guessed"}
+{"id": 20, "input": "just to summarize we agreed on the local first architecture the paperback theme and uh shipping mac os first", "expect": "summary cleaned; macOS casing ideal; no invented agenda items"}
