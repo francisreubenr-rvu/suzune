@@ -23,4 +23,10 @@ Local-first, open-source alternative to Wispr Flow. Multi-session project; this 
 
 ## Handoff notes
 
-(none yet)
+2026-07-03, session 1 (phase 3 underway):
+- Plan approved (all recommendations D1-D5 accepted: greenfield, model download on first run, macOS-only v1, no privacy-incident citations in marketing, private repo first).
+- M0 DONE: Rust 1.96.1 installed; Tauri 2 + React-TS scaffold builds; cargo target-dir on internal disk (~/.cache/cargo-targets/whispr) because SSD AppleDouble files corrupt tauri build output — keep .cargo/config.toml git-ignored.
+- Spikes DONE, see docs/spike-results.md. Binding decisions: Parakeet v2 int8 CPU default (RTF 0.035); model stays resident (17s reload); cleanup LLM = Qwen3-4B-Instruct-2507 Q4_K_M via llama-server (Metal), prompt v2 in spikes/s3-cleanup-bench/bench.py, prompt v3 must add no-code-conversion rule.
+- Models on disk at /Volumes/1TB SSD/LM/whispr-models/: parakeet-tdt-0.6b-v2-int8/, ggml-large-v3-turbo.bin, Qwen3-4B-Instruct-2507-Q4_K_M.gguf (+ rejected Qwen3-1.7B, Llama-3.2-3B GGUFs).
+- llama.cpp installed via Homebrew (llama-server on PATH).
+- M1 IN PROGRESS: workspace crates scaffolded (audio, vad, asr, pipeline-cli). Agent W1 implementing crates/audio + crates/vad; agent W2 implementing crates/asr. After they land: main session reviews, writes pipeline-cli integration (record -> VAD endpoint -> transcribe -> stdout), commits.

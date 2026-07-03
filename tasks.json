@@ -105,13 +105,13 @@
       "id": "P3-M1-pipeline",
       "phase": 3,
       "title": "M1: headless core pipeline (hotkey -> capture -> VAD -> ASR -> stdout)",
-      "status": "pending"
+      "status": "done"
     },
     {
       "id": "P3-M2-inject-cleanup",
       "phase": 3,
       "title": "M2: injection + coordinator + LLM cleanup wired",
-      "status": "pending"
+      "status": "in_progress"
     },
     {
       "id": "P3-M3-ui",

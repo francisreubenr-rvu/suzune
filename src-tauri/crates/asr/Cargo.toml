@@ -6,3 +6,7 @@ edition = "2021"
 [dependencies]
 anyhow = { workspace = true }
 log = { workspace = true }
+transcribe-rs = { version = "0.3.8", features = ["whisper-metal", "onnx"] }
+
+[dev-dependencies]
+hound = "3.5.1"

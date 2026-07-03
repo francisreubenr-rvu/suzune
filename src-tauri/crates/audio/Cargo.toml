@@ -6,3 +6,9 @@ edition = "2021"
 [dependencies]
 anyhow = { workspace = true }
 log = { workspace = true }
+cpal = "0.16"
+rubato = "0.16"
+crossbeam-channel = "0.5"
+
+[dev-dependencies]
+env_logger = "0.11"

@@ -5,6 +5,7 @@ edition = "2021"
 
 [dependencies]
 anyhow = { workspace = true }
+hound = "3.5.1"
 whispr-audio = { path = "../audio" }
 whispr-vad = { path = "../vad" }
 whispr-asr = { path = "../asr" }
