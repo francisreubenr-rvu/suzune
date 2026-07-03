@@ -1,0 +1,10 @@
+[package]
+name = "whispr-pipeline-cli"
+version = "0.1.0"
+edition = "2021"
+
+[dependencies]
+anyhow = { workspace = true }
+whispr-audio = { path = "../audio" }
+whispr-vad = { path = "../vad" }
+whispr-asr = { path = "../asr" }

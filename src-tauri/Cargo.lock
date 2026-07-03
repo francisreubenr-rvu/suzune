@@ -4247,6 +4247,43 @@ dependencies = [
  "tauri",
  "tauri-build",
  "tauri-plugin-opener",
+ "whispr-asr",
+ "whispr-audio",
+ "whispr-vad",
+]
+
+[[package]]
+name = "whispr-asr"
+version = "0.1.0"
+dependencies = [
+ "anyhow",
+ "log",
+]
+
+[[package]]
+name = "whispr-audio"
+version = "0.1.0"
+dependencies = [
+ "anyhow",
+ "log",
+]
+
+[[package]]
+name = "whispr-pipeline-cli"
+version = "0.1.0"
+dependencies = [
+ "anyhow",
+ "whispr-asr",
+ "whispr-audio",
+ "whispr-vad",
+]
+
+[[package]]
+name = "whispr-vad"
+version = "0.1.0"
+dependencies = [
+ "anyhow",
+ "log",
 ]
 
 [[package]]
