@@ -117,7 +117,7 @@
       "id": "P3-M3-ui",
       "phase": 3,
       "title": "M3: paperback UI - settings, overlay, model manager, history",
-      "status": "next"
+      "status": "core_done_settings_editor_pending"
     },
     {
       "id": "P3-M4-polish",

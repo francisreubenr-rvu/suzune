@@ -1,9 +1,14 @@
 import React from "react";
 import ReactDOM from "react-dom/client";
-import App from "./App";
+import { getCurrentWindow } from "@tauri-apps/api/window";
+import Overlay from "./Overlay";
+import SettingsPage from "./SettingsPage";
+import "./App.css";
+
+const label = getCurrentWindow().label;
 
 ReactDOM.createRoot(document.getElementById("root") as HTMLElement).render(
   <React.StrictMode>
-    <App />
+    {label === "overlay" ? <Overlay /> : <SettingsPage />}
   </React.StrictMode>,
 );
