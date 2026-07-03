@@ -71,7 +71,7 @@
       "id": "P4-landing-page",
       "phase": 4,
       "title": "3D animated marketing landing page (separate dir/branch)",
-      "status": "pending",
+      "status": "next",
       "blockedBy": [
         "P2-approval"
       ]
@@ -123,7 +123,7 @@
       "id": "P3-M4-polish",
       "phase": 3,
       "title": "M4: polish, README, GitHub push (private)",
-      "status": "pending"
+      "status": "done"
     }
   ]
 }
