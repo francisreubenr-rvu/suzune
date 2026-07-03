@@ -111,13 +111,13 @@
       "id": "P3-M2-inject-cleanup",
       "phase": 3,
       "title": "M2: injection + coordinator + LLM cleanup wired",
-      "status": "in_progress"
+      "status": "done_pending_live_verify"
     },
     {
       "id": "P3-M3-ui",
       "phase": 3,
       "title": "M3: paperback UI - settings, overlay, model manager, history",
-      "status": "pending"
+      "status": "next"
     },
     {
       "id": "P3-M4-polish",
