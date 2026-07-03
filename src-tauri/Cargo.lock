@@ -5245,6 +5245,22 @@ dependencies = [
 ]
 
 [[package]]
+name = "whispr-cleanup"
+version = "0.1.0"
+dependencies = [
+ "anyhow",
+ "log",
+]
+
+[[package]]
+name = "whispr-inject"
+version = "0.1.0"
+dependencies = [
+ "anyhow",
+ "log",
+]
+
+[[package]]
 name = "whispr-pipeline-cli"
 version = "0.1.0"
 dependencies = [

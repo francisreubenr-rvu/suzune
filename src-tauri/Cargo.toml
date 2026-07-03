@@ -1,5 +1,5 @@
 [workspace]
-members = ["crates/audio", "crates/vad", "crates/asr", "crates/pipeline-cli"]
+members = ["crates/audio", "crates/vad", "crates/asr", "crates/pipeline-cli", "crates/cleanup", "crates/inject"]
 
 [workspace.dependencies]
 anyhow = "1.0"
