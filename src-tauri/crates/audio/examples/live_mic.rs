@@ -3,10 +3,10 @@
 //! total buffer length returned by `stop()`. Not run in CI — requires a
 //! real microphone and OS permission grant. Run with:
 //!
-//!   cargo run -p fude-audio --example live_mic
+//!   cargo run -p suzune-audio --example live_mic
 
 use std::time::Duration;
-use fude_audio::Recorder;
+use suzune_audio::Recorder;
 
 const SECONDS: u64 = 8;
 
@@ -36,7 +36,7 @@ fn main() -> anyhow::Result<()> {
         "Done. {} live frames observed, {} total samples ({:.2}s at 16kHz).",
         frame_count,
         utterance.len(),
-        utterance.len() as f32 / fude_audio::SAMPLE_RATE as f32
+        utterance.len() as f32 / suzune_audio::SAMPLE_RATE as f32
     );
 
     Ok(())

@@ -1,4 +1,4 @@
-//! fude-inject: platform-neutral public API for injecting transcribed text
+//! suzune-inject: platform-neutral public API for injecting transcribed text
 //! into the focused UI element of whatever application the user is dictating
 //! into.
 //!
@@ -117,22 +117,22 @@ pub fn inject_auto_with_primary(
         // Explicit direct-type request: honor it with no fallback.
         InjectionMethod::DirectType => {
             direct_type::type_text(text)?;
-            log::info!("fude-inject: injected via {}", InjectionMethod::DirectType);
+            log::info!("suzune-inject: injected via {}", InjectionMethod::DirectType);
             return Ok(InjectionMethod::DirectType);
         }
     };
 
     match primary_call(text) {
         Ok(()) => {
-            log::info!("fude-inject: injected via {primary}");
+            log::info!("suzune-inject: injected via {primary}");
             Ok(primary)
         }
         Err(primary_err) => {
             log::info!(
-                "fude-inject: {primary} unavailable ({primary_err}), falling back to {fallback}"
+                "suzune-inject: {primary} unavailable ({primary_err}), falling back to {fallback}"
             );
             fallback_call(text)?;
-            log::info!("fude-inject: injected via {fallback}");
+            log::info!("suzune-inject: injected via {fallback}");
             Ok(fallback)
         }
     }

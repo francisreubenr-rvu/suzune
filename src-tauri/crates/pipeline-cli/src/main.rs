@@ -1,4 +1,4 @@
-// M1 integration harness: exercises the full fude core pipeline
+// M1 integration harness: exercises the full suzune core pipeline
 // (frames -> VAD endpointing -> ASR) outside the Tauri app.
 //
 // Live mode (default): records from the default mic until the endpointer
@@ -6,13 +6,13 @@
 // Wav mode (--wav <file>): drives the identical pipeline from a 16kHz mono
 // wav instead of the mic.
 //
-// Usage: fude-pipeline-cli --models <dir> [--wav <file>] [--timeout <secs>]
+// Usage: suzune-pipeline-cli --models <dir> [--wav <file>] [--timeout <secs>]
 
 use anyhow::{Context, Result};
 use std::time::{Duration, Instant};
-use fude_asr::{Engine, EngineKind};
-use fude_audio::{Recorder, FRAME_SAMPLES};
-use fude_vad::{EndpointEvent, Endpointer, Vad};
+use suzune_asr::{Engine, EngineKind};
+use suzune_audio::{Recorder, FRAME_SAMPLES};
+use suzune_vad::{EndpointEvent, Endpointer, Vad};
 
 const SPEECH_THRESHOLD: f32 = 0.5;
 const MIN_SPEECH_MS: u32 = 150;
@@ -95,7 +95,7 @@ fn arg_value(args: &[String], flag: &str) -> Option<String> {
 fn main() -> Result<()> {
     let args: Vec<String> = std::env::args().collect();
     let models_root = arg_value(&args, "--models")
-        .context("required: --models <dir> (e.g. '/Volumes/1TB SSD/LM/fude-models')")?;
+        .context("required: --models <dir> (e.g. '/Volumes/1TB SSD/LM/suzune-models')")?;
     let models_root = std::path::Path::new(&models_root).to_path_buf();
     let timeout_s: u64 = arg_value(&args, "--timeout")
         .map(|v| v.parse())

@@ -1,13 +1,13 @@
 //! Integration test: loads the real Parakeet v2 model from the models root
 //! on this machine and transcribes a real sample WAV. Marked `#[ignore]` so
 //! `cargo test` stays fast without the model present; run explicitly with
-//! `cargo test -p fude-asr -- --ignored`.
+//! `cargo test -p suzune-asr -- --ignored`.
 
 use std::path::{Path, PathBuf};
 
-use fude_asr::{Engine, EngineKind};
+use suzune_asr::{Engine, EngineKind};
 
-const MODELS_ROOT: &str = "/Volumes/1TB SSD/LM/fude-models";
+const MODELS_ROOT: &str = "/Volumes/1TB SSD/LM/suzune-models";
 
 fn sample_wav_path() -> PathBuf {
     // CARGO_MANIFEST_DIR = .../src-tauri/crates/asr

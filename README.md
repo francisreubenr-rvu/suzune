@@ -1,12 +1,12 @@
-# fude
+# suzune
 
 Press a key, speak, get clean formatted text in any app — and nothing ever leaves your machine.
 
-fude is a fully local voice-dictation app for macOS. Hold a global hotkey, talk, release: your speech is transcribed on-device, tidied up by a small local language model (fillers removed, self-corrections applied, punctuation fixed), and typed into whatever app has focus. There is no cloud, no account, no telemetry, and no subscription — the privacy claim is architectural, not a policy promise.
+suzune is a fully local voice-dictation app for macOS. Hold a global hotkey, talk, release: your speech is transcribed on-device, tidied up by a small local language model (fillers removed, self-corrections applied, punctuation fixed), and typed into whatever app has focus. There is no cloud, no account, no telemetry, and no subscription — the privacy claim is architectural, not a policy promise.
 
 ## Why
 
-Cloud dictation tools stream your voice — and in some cases periodic screenshots of your active window — to remote servers, retain data by default, and charge monthly for the privilege. fude exists to prove the same experience runs locally on Apple Silicon with nothing to verify and nothing to trust: the audio path is auditable source code.
+Cloud dictation tools stream your voice — and in some cases periodic screenshots of your active window — to remote servers, retain data by default, and charge monthly for the privilege. suzune exists to prove the same experience runs locally on Apple Silicon with nothing to verify and nothing to trust: the audio path is auditable source code.
 
 ## How it works
 
@@ -25,7 +25,7 @@ Measured on a MacBook M1 Pro (16GB): a 10-second utterance transcribes in ~400ms
 
 Early but functional. Built and tested on macOS; the codebase is written to build on Windows and Linux too (the whisper.cpp GPU backend is selected per-target — Metal on macOS, Vulkan/DirectML on Windows, Vulkan on Linux — and text injection uses the platform paste keystroke). Those builds are feasible but unverified for now.
 
-On first launch fude fetches its on-device models automatically (a progress screen shows the download once, then never again) into the app data directory — nothing to install by hand. Settings are editable in-app from the tray: hotkey, push-to-talk vs continuous mode, text-placement method, microphone, and the cleanup pass.
+On first launch suzune fetches its on-device models automatically (a progress screen shows the download once, then never again) into the app data directory — nothing to install by hand. Settings are editable in-app from the tray: hotkey, push-to-talk vs continuous mode, text-placement method, microphone, and the cleanup pass.
 
 | Setting | Default | Meaning |
 |---|---|---|
@@ -54,11 +54,11 @@ Parakeet TDT 0.6B v2 int8 (ONNX), Silero VAD v4 (ONNX), and a cleanup GGUF (Qwen
 
 ## Permissions
 
-fude asks for exactly two macOS permissions: Microphone (to hear you) and Accessibility (to type into the focused app). Both stay on your machine — there is no third place for the data to go.
+suzune asks for exactly two macOS permissions: Microphone (to hear you) and Accessibility (to type into the focused app). Both stay on your machine — there is no third place for the data to go.
 
 ## Acknowledgements
 
-The architecture owes a debt to [Handy](https://github.com/cjpais/Handy) (MIT) — fude adapts several of its proven patterns (coordinator state machine, multi-engine ASR via transcribe-rs, clipboard save/paste/restore injection) and adds an embedded local LLM cleanup layer, a pinned-microphone capture chain, and a paperback-themed UI.
+The architecture owes a debt to [Handy](https://github.com/cjpais/Handy) (MIT) — suzune adapts several of its proven patterns (coordinator state machine, multi-engine ASR via transcribe-rs, clipboard save/paste/restore injection) and adds an embedded local LLM cleanup layer, a pinned-microphone capture chain, and a paperback-themed UI.
 
 ## License
 
@@ -69,7 +69,7 @@ Handy, MIT © cjpais).
 
 ## Disclaimer
 
-fude is an independent, open-source project. It is not affiliated with,
+suzune is an independent, open-source project. It is not affiliated with,
 endorsed by, or connected to Wispr AI, OpenAI, NVIDIA, Alibaba, or any other
 company. Product and company names mentioned are the trademarks of their
 respective owners and are used only for identification and comparison. All

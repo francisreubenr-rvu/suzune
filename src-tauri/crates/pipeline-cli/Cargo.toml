@@ -1,11 +1,11 @@
 [package]
-name = "fude-pipeline-cli"
+name = "suzune-pipeline-cli"
 version = "0.1.0"
 edition = "2021"
 
 [dependencies]
 anyhow = { workspace = true }
 hound = "3.5.1"
-fude-audio = { path = "../audio" }
-fude-vad = { path = "../vad" }
-fude-asr = { path = "../asr" }
+suzune-audio = { path = "../audio" }
+suzune-vad = { path = "../vad" }
+suzune-asr = { path = "../asr" }

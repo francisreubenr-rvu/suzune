@@ -35,7 +35,7 @@ pub struct Settings {
 impl Default for Settings {
     fn default() -> Self {
         Settings {
-            models_root: PathBuf::from("/Volumes/1TB SSD/LM/fude-models"),
+            models_root: PathBuf::from("/Volumes/1TB SSD/LM/suzune-models"),
             input_device: None,
             shortcut: "alt+space".to_string(),
             push_to_talk: true,

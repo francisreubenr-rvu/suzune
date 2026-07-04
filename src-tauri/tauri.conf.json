@@ -1,8 +1,8 @@
 {
   "$schema": "https://schema.tauri.app/config/2",
-  "productName": "fude",
+  "productName": "suzune",
   "version": "0.1.0",
-  "identifier": "dev.fude.app",
+  "identifier": "dev.suzune.app",
   "build": {
     "beforeDevCommand": "bun run dev",
     "devUrl": "http://localhost:1420",
@@ -13,7 +13,7 @@
     "windows": [
       {
         "label": "main",
-        "title": "fude",
+        "title": "suzune",
         "width": 760,
         "height": 560,
         "visible": false,

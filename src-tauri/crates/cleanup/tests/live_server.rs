@@ -1,10 +1,10 @@
 //! Integration test against a real llama-server + real GGUF model. Not run by
 //! default (spawns a real process, loads a ~2.5GB model, takes real wall
 //! time) — run explicitly with:
-//!   cargo test -p fude-cleanup -- --ignored
+//!   cargo test -p suzune-cleanup -- --ignored
 
 use std::path::PathBuf;
-use fude_cleanup::{CleanupClient, LlamaServer, LlamaServerConfig};
+use suzune_cleanup::{CleanupClient, LlamaServer, LlamaServerConfig};
 
 const PORT: u16 = 8544;
 
@@ -12,10 +12,10 @@ fn config() -> LlamaServerConfig {
     LlamaServerConfig {
         server_binary_path: PathBuf::from("/opt/homebrew/bin/llama-server"),
         model_gguf_path: PathBuf::from(
-            "/Volumes/1TB SSD/LM/fude-models/Qwen2.5-1.5B-Instruct-Q4_K_M.gguf",
+            "/Volumes/1TB SSD/LM/suzune-models/Qwen2.5-1.5B-Instruct-Q4_K_M.gguf",
         ),
         port: PORT,
-        log_path: std::env::temp_dir().join("fude-cleanup-test.log"),
+        log_path: std::env::temp_dir().join("suzune-cleanup-test.log"),
     }
 }
 

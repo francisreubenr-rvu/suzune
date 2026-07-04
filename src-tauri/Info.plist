@@ -3,7 +3,7 @@
 <plist version="1.0">
 <dict>
   <key>NSMicrophoneUsageDescription</key>
-  <string>whispr transcribes your speech entirely on this Mac. Audio never leaves the device.</string>
+  <string>suzune transcribes your speech entirely on this Mac. Audio never leaves the device.</string>
   <key>LSUIElement</key>
   <true/>
 </dict>

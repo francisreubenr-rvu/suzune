@@ -10,8 +10,8 @@ use std::path::{Path, PathBuf};
 
 use anyhow::{anyhow, Result};
 
-/// ASR engines fude can use. Each variant maps to one on-disk model
-/// resolved relative to a models root directory (e.g. `/Volumes/1TB SSD/LM/fude-models`).
+/// ASR engines suzune can use. Each variant maps to one on-disk model
+/// resolved relative to a models root directory (e.g. `/Volumes/1TB SSD/LM/suzune-models`).
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub enum EngineKind {
     /// Parakeet TDT 0.6B v2, int8 ONNX. English-only default (S1 spike: RTF 0.033-0.039, CPU).
@@ -48,7 +48,7 @@ impl EngineKind {
 
 /// Files that must be present inside a Parakeet model directory for it to be
 /// considered downloaded. Mirrors the layout produced by the spike model
-/// (`/Volumes/1TB SSD/LM/fude-models/parakeet-tdt-0.6b-v2-int8`).
+/// (`/Volumes/1TB SSD/LM/suzune-models/parakeet-tdt-0.6b-v2-int8`).
 const PARAKEET_FILES: &[&str] = &[
     "encoder-model.int8.onnx",
     "decoder_joint-model.int8.onnx",
@@ -116,7 +116,7 @@ mod tests {
 
     fn tempdir() -> PathBuf {
         let dir = std::env::temp_dir().join(format!(
-            "fude-asr-test-{}-{}",
+            "suzune-asr-test-{}-{}",
             std::process::id(),
             std::time::SystemTime::now()
                 .duration_since(std::time::UNIX_EPOCH)

@@ -1,42 +1,25 @@
 # Naming Decision
 
-The product was renamed from **whispr** to **fude** to eliminate the
-trademark likelihood-of-confusion risk with "Wispr Flow" (Wispr AI) and
-OpenAI's "Whisper" (see `docs/legal-review.md`).
+## Chosen name: suzune (鈴音)
 
-## Chosen name: fude (筆)
+Japanese for "the sound of a bell" — 鈴 (*suzu*, "bell") + 音 (*ne*, "sound/tone").
+Pronounced soo-zoo-neh. Styled lowercase as a wordmark, matching the paperback
+aesthetic.
 
-Japanese for "writing brush" — the instrument that turns a stroke of
-intent into ink on paper. Pronounced FOO-deh. Styled lowercase as a
-wordmark, matching the paperback aesthetic.
+## Why it was chosen
 
-Why it won, across a three-seat naming council (universal phonetics,
-Japanese sound symbolism, availability):
+- **Meaning:** a bell's clear, small tone — evokes the moment speech is heard
+  and captured, fitting a tool that listens and turns sound into text.
+- **Sound:** soft, three syllables, straightforward for English speakers to
+  pronounce and spell.
+- **Availability (verified):** no software, SaaS, AI, or dictation product
+  found using this name. The only overlap found is a small, pre-debut
+  VTuber's personal social-media handle — not a company, product, or
+  commercial entity, and not in the dictation/AI category.
 
-- **Sound symbolism:** soft /f/ onset, open CV syllables, and a voiced
-  /-de/ close (the dakuten voicing effect the user intuited as "b/d =
-  trustable, p = power"). Reads as calm and grounded, not sharp.
-- **Meaning:** names the mechanism (a brush writing what you say) and
-  anchors the paperback/literary identity without a separate metaphor.
-- **Distinctiveness:** shares no letters or sounds with Whisper/Wispr.
-- **Availability (verified):** no voice/dictation/AI product or software
-  trademark named "fude"; the only GitHub `fude` repos are an unrelated
-  agricultural R package and a game-dev tool. Clear of the collisions
-  that disqualified the poetic alternatives.
+## Residual risk
 
-## Disqualified by hard collision (why the space is a minefield)
-
-| Name | Collision |
-|---|---|
-| Vellum | vellum.ai (YC-backed AI dev tool) + registered software trademark |
-| Sumi | github.com/alan890104/sumi — an existing macOS local dictation app, same pitch |
-| Sotto | sottovoice.app — existing macOS local dictation app |
-| Murmur | Mumble's VoIP server + existing macOS dictation repos |
-| Folio | FOLIO platform, AppFolio, and other software trademarks |
-
-## Documented alternates (swap-in ready if fude is rejected)
-
-- **Bindery** — English, bookbinding tie, soft consonants; only minor
-  unrelated hobby repos exist (low-medium risk).
-- **Nagi** (凪) — the windless calm at sea; clear in-category but a very
-  common Japanese word/name (more ambient collision).
+Low. No competing product, no trademark collision found in the software or
+AI/dictation categories. A formal USPTO/registrar-level trademark clearance
+search is recommended before public launch — standard due diligence, not a
+specific concern raised by this name.

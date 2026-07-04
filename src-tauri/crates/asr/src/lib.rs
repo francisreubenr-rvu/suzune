@@ -1,4 +1,4 @@
-//! fude-asr: ASR engine selection, model path resolution, and transcription.
+//! suzune-asr: ASR engine selection, model path resolution, and transcription.
 //!
 //! v1 scope: resolve and validate model paths for the three supported
 //! engines, load a chosen engine, and transcribe 16kHz mono audio. Model

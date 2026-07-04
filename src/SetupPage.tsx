@@ -34,13 +34,13 @@ export default function SetupPage({ onDone }: { onDone: () => void }) {
   return (
     <main className="page setup">
       <header className="page__masthead">
-        <h1>fude</h1>
+        <h1>suzune</h1>
         <p className="page__tagline">Setting up for first use.</p>
       </header>
 
       <section className="page__section">
         <p className="setup__lede">
-          fude runs entirely on your Mac, so it needs to fetch its speech
+          suzune runs entirely on your Mac, so it needs to fetch its speech
           and cleanup models once. This happens now and never again.
         </p>
 
@@ -65,12 +65,12 @@ export default function SetupPage({ onDone }: { onDone: () => void }) {
           )}
           {ev?.stage === "done" && (
             <span className="setup__line setup__line--ok">
-              Ready. fude lives in your menu bar now.
+              Ready. suzune lives in your menu bar now.
             </span>
           )}
           {ev?.stage === "error" && (
             <span className="setup__line setup__line--err">
-              Setup failed: {ev.message}. Check your connection and reopen fude.
+              Setup failed: {ev.message}. Check your connection and reopen suzune.
             </span>
           )}
         </div>

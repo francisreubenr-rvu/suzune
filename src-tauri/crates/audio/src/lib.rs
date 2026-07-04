@@ -1,4 +1,4 @@
-//! Microphone capture for fude.
+//! Microphone capture for suzune.
 //!
 //! Records from the default input device at its native rate/channel count,
 //! downmixes to mono, and resamples to 16kHz f32 (the rate every downstream
@@ -10,8 +10,8 @@
 //! Capture pattern (worker thread owns the `cpal::Stream`, command channel
 //! drives start/stop, frames flow back over a channel) is adapted from
 //! Handy's `audio_toolkit::audio::recorder` (MIT, cjpais/Handy), trimmed to
-//! fude's scope: no built-in VAD gating or spectrum visualizer in this
-//! crate — those live in `fude-vad` and the UI layer respectively.
+//! suzune's scope: no built-in VAD gating or spectrum visualizer in this
+//! crate — those live in `suzune-vad` and the UI layer respectively.
 
 mod resampler;
 
@@ -148,7 +148,7 @@ impl Recorder {
                         Ok(ok) => return Ok(ok),
                         Err(e) => {
                             log::warn!(
-                                "fude-audio: device {:?} unusable: {e}",
+                                "suzune-audio: device {:?} unusable: {e}",
                                 device.name()
                             );
                             last_err = e;
@@ -165,7 +165,7 @@ impl Recorder {
                     drop(stream);
                 }
                 Err(msg) => {
-                    log::error!("fude-audio: {msg}");
+                    log::error!("suzune-audio: {msg}");
                     let _ = init_tx.send(Err(msg));
                 }
             }
@@ -213,7 +213,7 @@ pub fn input_device_names() -> Vec<String> {
     match host.input_devices() {
         Ok(devices) => devices.filter_map(|d| d.name().ok()).collect(),
         Err(e) => {
-            log::warn!("fude-audio: could not list input devices: {e}");
+            log::warn!("suzune-audio: could not list input devices: {e}");
             Vec::new()
         }
     }
@@ -249,7 +249,7 @@ fn candidate_devices(host: &cpal::Host, preferred: Option<&str>) -> Vec<Device> 
     let iter = match host.input_devices() {
         Ok(it) => it,
         Err(e) => {
-            log::warn!("fude-audio: could not enumerate input devices: {e}");
+            log::warn!("suzune-audio: could not enumerate input devices: {e}");
             return host.default_input_device().into_iter().collect();
         }
     };
@@ -267,7 +267,7 @@ fn candidate_devices(host: &cpal::Host, preferred: Option<&str>) -> Vec<Device> 
         }
     }
     if preferred.is_some() && pinned.is_empty() {
-        log::warn!("fude-audio: preferred device {:?} not found, using fallback order", preferred);
+        log::warn!("suzune-audio: preferred device {:?} not found, using fallback order", preferred);
     }
     pinned
         .into_iter()
@@ -314,7 +314,7 @@ fn try_open_stream(
             Ok(stream) => match stream.play() {
                 Ok(()) => {
                     log::info!(
-                        "fude-audio: device={:?} rate={} channels={} format={:?}",
+                        "suzune-audio: device={:?} rate={} channels={} format={:?}",
                         device.name(),
                         in_rate,
                         channels,
@@ -343,7 +343,7 @@ fn preferred_input_config(device: &Device) -> Result<cpal::SupportedStreamConfig
     let supported = match device.supported_input_configs() {
         Ok(configs) => configs,
         Err(e) => {
-            log::warn!("fude-audio: could not enumerate input configs ({e}), using default");
+            log::warn!("suzune-audio: could not enumerate input configs ({e}), using default");
             return Ok(default_config);
         }
     };
@@ -394,7 +394,7 @@ fn build_input_stream(
             build_typed_stream::<u8>(device, config, raw_tx, channels, stop_flag)
         }
         other => {
-            log::error!("fude-audio: unsupported sample format {other:?}");
+            log::error!("suzune-audio: unsupported sample format {other:?}");
             Err(cpal::BuildStreamError::StreamConfigNotSupported)
         }
     }
@@ -434,14 +434,14 @@ where
         };
 
         if raw_tx.send(RawChunk::Samples(mono)).is_err() {
-            log::error!("fude-audio: sample channel closed, dropping audio");
+            log::error!("suzune-audio: sample channel closed, dropping audio");
         }
     };
 
     device.build_input_stream(
         &config.clone().into(),
         callback,
-        |err| log::error!("fude-audio: stream error: {err}"),
+        |err| log::error!("suzune-audio: stream error: {err}"),
         None,
     )
 }
@@ -466,7 +466,7 @@ fn run_worker(
         }
         utterance.extend_from_slice(frame);
         if frame_tx.send(frame.to_vec()).is_err() {
-            log::trace!("fude-audio: no live-frame subscribers");
+            log::trace!("suzune-audio: no live-frame subscribers");
         }
     };
 
@@ -506,7 +506,7 @@ fn run_worker(
                             Ok(RawChunk::EndOfStream) => break,
                             Err(_) => {
                                 log::warn!(
-                                    "fude-audio: timed out waiting for end-of-stream"
+                                    "suzune-audio: timed out waiting for end-of-stream"
                                 );
                                 break;
                             }

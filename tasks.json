@@ -1,5 +1,5 @@
 {
-  "project": "fude",
+  "project": "suzune",
   "updated": "2026-07-03",
   "tasks": [
     {
@@ -61,7 +61,7 @@
     {
       "id": "P3-implementation",
       "phase": 3,
-      "title": "Implement fude per approved plan (task breakdown to be expanded from plan)",
+      "title": "Implement suzune per approved plan (task breakdown to be expanded from plan)",
       "status": "in_progress",
       "blockedBy": [
         "P2-approval"
@@ -79,7 +79,7 @@
     {
       "id": "P5-demo-video",
       "phase": 5,
-      "title": "Demo video of fude in use",
+      "title": "Demo video of suzune in use",
       "status": "done",
       "blockedBy": [
         "P3-implementation"
@@ -152,13 +152,13 @@
     {
       "id": "P6-rename",
       "phase": 6,
-      "title": "Rename whispr->fude (council-decided), rebuild, repo public",
+      "title": "Rename suzune->suzune (council-decided), rebuild, repo public",
       "status": "done"
     },
     {
       "id": "P6-public",
       "phase": 6,
-      "title": "GitHub repo made public at francisreubenr-rvu/fude",
+      "title": "GitHub repo made public at francisreubenr-rvu/suzune",
       "status": "done"
     }
   ]

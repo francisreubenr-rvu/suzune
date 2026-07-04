@@ -1,12 +1,12 @@
 # LinkedIn announcement — draft
 
 Status: DRAFT, prepared and held at the user's request (do not post). Name is
-settled (fude). Professional-but-personal tone, only measured claims, no named
+settled (suzune). Professional-but-personal tone, only measured claims, no named
 competitor. Post only when the user gives the go-ahead.
 
 ---
 
-I spent the last few days building fude — voice dictation that runs
+I spent the last few days building suzune — voice dictation that runs
 entirely on my Mac. Nothing it hears ever leaves the machine.
 
 The idea was simple and a little stubborn: press a key, talk, and have clean
@@ -44,7 +44,7 @@ local-first tools are your thing, I'd love your thoughts.
 
 ## Notes for posting (when cleared)
 
-- Attach the demo video (`docs/demo/fude-demo.mp4`).
+- Attach the demo video (`docs/demo/suzune-demo.mp4`).
 - Optionally link the repo once it is made public and the name is settled.
 - Keep the comparison implicit ("most dictation tools") — do not name or tag
   any competitor, per the legal review.

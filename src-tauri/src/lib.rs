@@ -59,7 +59,7 @@ fn save_settings(
 /// List available input-device names so the settings UI can offer a picker.
 #[tauri::command]
 fn list_input_devices() -> Vec<String> {
-    fude_audio::input_device_names()
+    suzune_audio::input_device_names()
 }
 
 #[tauri::command]
@@ -135,7 +135,7 @@ fn create_overlay(app: &tauri::AppHandle) -> tauri::Result<()> {
     const W: f64 = 230.0;
     const H: f64 = 52.0;
     let builder = WebviewWindowBuilder::new(app, "overlay", WebviewUrl::App("index.html".into()))
-        .title("fude overlay")
+        .title("suzune overlay")
         .inner_size(W, H)
         .decorations(false)
         .transparent(true)
@@ -162,7 +162,7 @@ fn create_overlay(app: &tauri::AppHandle) -> tauri::Result<()> {
     } else {
         log::warn!("overlay: no monitor resolved; leaving default position");
     }
-    if std::env::var("FUDE_DEVTOOLS").is_ok() {
+    if std::env::var("SUZUNE_DEVTOOLS").is_ok() {
         window.open_devtools();
     }
     Ok(())
@@ -197,11 +197,11 @@ pub fn run() {
 
             let show_settings =
                 MenuItem::with_id(app, "settings", "Settings", true, None::<&str>)?;
-            let quit = MenuItem::with_id(app, "quit", "Quit fude", true, None::<&str>)?;
+            let quit = MenuItem::with_id(app, "quit", "Quit suzune", true, None::<&str>)?;
             let menu = Menu::with_items(app, &[&show_settings, &quit])?;
-            TrayIconBuilder::with_id("fude-tray")
+            TrayIconBuilder::with_id("suzune-tray")
                 .icon(app.default_window_icon().unwrap().clone())
-                .tooltip("fude — hold your shortcut and speak")
+                .tooltip("suzune — hold your shortcut and speak")
                 .menu(&menu)
                 .on_menu_event(|app, event| match event.id.as_ref() {
                     "settings" => {
@@ -263,11 +263,11 @@ pub fn run() {
                 });
             }
 
-            // FUDE_SELFTEST=record: drive one real record->cancel cycle
+            // SUZUNE_SELFTEST=record: drive one real record->cancel cycle
             // through the coordinator shortly after launch. Exercises the
             // overlay + mic path without a human at the keyboard (used for
             // automated visual verification; harmless to leave in).
-            if std::env::var("FUDE_SELFTEST").as_deref() == Ok("record") {
+            if std::env::var("SUZUNE_SELFTEST").as_deref() == Ok("record") {
                 let handle = app.handle().clone();
                 std::thread::spawn(move || {
                     std::thread::sleep(std::time::Duration::from_secs(25));
@@ -277,10 +277,10 @@ pub fn run() {
                 });
             }
 
-            // FUDE_SELFTEST=demo: record a fixed 8s window starting 6s
+            // SUZUNE_SELFTEST=demo: record a fixed 8s window starting 6s
             // after launch, for producing a demo capture with externally
             // synced audio playback.
-            if std::env::var("FUDE_SELFTEST").as_deref() == Ok("demo") {
+            if std::env::var("SUZUNE_SELFTEST").as_deref() == Ok("demo") {
                 let handle = app.handle().clone();
                 std::thread::spawn(move || {
                     std::thread::sleep(std::time::Duration::from_secs(6));
@@ -290,10 +290,10 @@ pub fn run() {
                 });
             }
 
-            // FUDE_SELFTEST=savetest: exercise the save_settings path
+            // SUZUNE_SELFTEST=savetest: exercise the save_settings path
             // (persist + re-register shortcut + reload) without the UI, to
             // verify hotkey/mode changes apply live.
-            if std::env::var("FUDE_SELFTEST").as_deref() == Ok("savetest") {
+            if std::env::var("SUZUNE_SELFTEST").as_deref() == Ok("savetest") {
                 let handle = app.handle().clone();
                 std::thread::spawn(move || {
                     std::thread::sleep(std::time::Duration::from_secs(3));
@@ -315,9 +315,9 @@ pub fn run() {
                 });
             }
 
-            // FUDE_SHOW_SETTINGS=1: open the settings window on launch
+            // SUZUNE_SHOW_SETTINGS=1: open the settings window on launch
             // (for visual verification without clicking the tray).
-            if std::env::var("FUDE_SHOW_SETTINGS").is_ok() {
+            if std::env::var("SUZUNE_SHOW_SETTINGS").is_ok() {
                 if let Some(w) = app.get_webview_window("main") {
                     let _ = w.show();
                     let _ = w.set_focus();

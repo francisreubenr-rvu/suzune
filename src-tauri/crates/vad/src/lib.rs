@@ -1,4 +1,4 @@
-//! Voice activity detection and utterance endpointing for fude.
+//! Voice activity detection and utterance endpointing for suzune.
 //!
 //! See [`vad::Vad`] for the Silero model wrapper (a version-compatibility
 //! note there explains why v4, not v5, is wired up) and [`endpointer`] for
