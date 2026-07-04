@@ -7,10 +7,10 @@ Local-first, open-source alternative to Wispr Flow. Multi-session project; this 
 | Phase | Status | Output |
 |---|---|---|
 | 1. Research (Wispr Flow teardown, complaints, local ASR stacks) | DONE 2026-07-03 — 3 reports + docs/findings.md | docs/ |
-| 2. Planning | DONE 2026-07-03 — AWAITING USER APPROVAL of implementation_plan.md (decisions D1-D5) | implementation_plan.md |
-| 3. Implementation | not started — blocked on user approval of plan | app code in this repo |
-| 4. Landing page | not started | separate directory/branch |
-| 5. Demo video + LinkedIn post | not started | — |
+| 2. Planning | DONE 2026-07-03 — plan approved (decisions D1-D5) | implementation_plan.md |
+| 3. Implementation (M0-M4 + injection fix, settings UI, first-run download) | DONE — see milestone log below. Two M3 items remain deferred: waveform level metering, engine-load stagger (not blocking; app is fully functional without them) | app code in this repo |
+| 4. Landing page | DONE — self-contained landing/index.html, visually verified desktop + 390px | landing/ |
+| 5. Demo video + LinkedIn post | DONE — video re-rendered post-rename; LinkedIn post drafted and held per user (not posted) | docs/demo/suzune-demo.mp4, docs/linkedin-post.md |
 
 ## Key context for future sessions
 
@@ -40,5 +40,6 @@ Local-first, open-source alternative to Wispr Flow. Multi-session project; this 
 - 2026-07-04 session 2: codex Swift project deleted per user. Terminal-dictation complaint root-caused: injection into terminal PROVEN working (inject_demo lands in prompt); real culprit was macOS Continuity re-grabbing the default mic for the iPhone -> silence -> silent idle. Fixed: settings.input_device pin (user's set to "MacBook Pro Microphone"), empty transcript now shows an error pill. Committed 3938eec.
 - M4 DONE (55c151b): paperback app icon, README (measured claims only), Info.plist (mic usage + LSUIElement), suzune.app + dmg bundles, pushed PRIVATE to https://github.com/francisreubenr-rvu/suzune. AppleDouble files also corrupt .git/objects/pack — run find .git -name '._*' -delete if git errors appear.
 - M3 remaining (deferred): settings editor UI, waveform level metering, engine-load stagger. Bundled .app has its own TCC identity — user currently runs the bare binary (inherits terminal permissions).
-- M5 IN PROGRESS: agent W5 building landing/index.html (single self-contained file, paperback theme, CSS-3D book hero, scroll transitions). Main session must visually verify (desktop + 390px) and iterate before calling it done.
-- M6 after M5: demo video + LinkedIn post (professional-personal tone, no unverified competitor claims per D4).
+- M5 DONE: landing/index.html (single self-contained file, paperback theme, CSS-3D book hero, scroll transitions). Visually verified desktop (1440px) + mobile (390px) via headless Playwright screenshots on 2026-07-05; fixed a real bug found in verification (book cover subtitle text overflowed/clipped at ≤460px — added padding + a mobile font-size step).
+- M6 DONE: demo video (docs/demo/suzune-demo.mp4, re-rendered 2026-07-05 by capturing docs/demo/demo-anim.html frame-by-frame with headless Chromium + ffmpeg — the animation source was already suzune-branded, only the video artifact was stale) + LinkedIn post (docs/linkedin-post.md, still held per user — not posted).
+- 2026-07-05: milestone audit — confirmed M0-M6 all complete except two M3 items intentionally deferred and never revisited: waveform level metering (Overlay.tsx only shows a static pulsing dot + text label, no live audio level visualization) and engine-load stagger (ASR engine and cleanup llama-server both load back-to-back on the coordinator thread at startup, coordinator.rs Worker::new — no explicit stagger). Neither blocks normal use; flagging so they don't get silently forgotten.

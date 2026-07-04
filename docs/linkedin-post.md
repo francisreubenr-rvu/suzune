@@ -6,8 +6,9 @@ competitor. Post only when the user gives the go-ahead.
 
 ---
 
-I spent the last few days building suzune — voice dictation that runs
-entirely on my Mac. Nothing it hears ever leaves the machine.
+I spent the last few days building suzune (鈴音 — Japanese for "the sound of
+a bell") — voice dictation that runs entirely on my Mac. Nothing it hears
+ever leaves the machine.
 
 The idea was simple and a little stubborn: press a key, talk, and have clean
 text appear in whatever app I'm in — email, terminal, chat — without a single

@@ -62,7 +62,7 @@
       "id": "P3-implementation",
       "phase": 3,
       "title": "Implement suzune per approved plan (task breakdown to be expanded from plan)",
-      "status": "in_progress",
+      "status": "done",
       "blockedBy": [
         "P2-approval"
       ]
@@ -111,7 +111,7 @@
       "id": "P3-M2-inject-cleanup",
       "phase": 3,
       "title": "M2: injection + coordinator + LLM cleanup wired",
-      "status": "done_pending_live_verify"
+      "status": "done"
     },
     {
       "id": "P3-M3-ui",
@@ -152,7 +152,7 @@
     {
       "id": "P6-rename",
       "phase": 6,
-      "title": "Rename suzune->suzune (council-decided), rebuild, repo public",
+      "title": "Rename fude->suzune (council-decided), rebuild, repo public",
       "status": "done"
     },
     {

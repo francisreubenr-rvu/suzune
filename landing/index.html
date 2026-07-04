@@ -306,6 +306,8 @@ kbd {
   align-items: center;
   justify-content: center;
   gap: 0.6rem;
+  padding: 0 14px;
+  text-align: center;
   color: var(--paper);
 }
 
@@ -328,6 +330,11 @@ kbd {
   text-transform: uppercase;
   letter-spacing: 0.22em;
   color: rgba(246, 241, 231, 0.55);
+  white-space: nowrap;
+}
+
+@media (max-width: 460px) {
+  .book__cover .book__sub { font-size: 0.5rem; letter-spacing: 0.13em; }
 }
 
 .book__cover::after {
