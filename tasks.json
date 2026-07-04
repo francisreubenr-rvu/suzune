@@ -117,12 +117,36 @@
       "id": "P3-M3-ui",
       "phase": 3,
       "title": "M3: paperback UI - settings, overlay, model manager, history",
-      "status": "core_done_settings_editor_pending"
+      "status": "done"
     },
     {
       "id": "P3-M4-polish",
       "phase": 3,
       "title": "M4: polish, README, GitHub push (private)",
+      "status": "done"
+    },
+    {
+      "id": "P3-injection-fix",
+      "phase": 3,
+      "title": "Clipboard-first injection (Terminal/WhatsApp fix)",
+      "status": "done"
+    },
+    {
+      "id": "P3-settings-ui",
+      "phase": 3,
+      "title": "Interactive settings UI (hotkey, mode, injection, mic, cleanup)",
+      "status": "done"
+    },
+    {
+      "id": "P3-windows-feasible",
+      "phase": 3,
+      "title": "Windows/Linux build feasibility (target-conditional ASR backend)",
+      "status": "done"
+    },
+    {
+      "id": "P3-first-run-download",
+      "phase": 3,
+      "title": "First-run model auto-download with progress UI",
       "status": "done"
     }
   ]

@@ -36,3 +36,6 @@ tauri-plugin-global-shortcut = "2"
 anyhow.workspace = true
 env_logger = "0.11.11"
 log.workspace = true
+ureq = "2"
+flate2 = "1.1.9"
+tar = "0.4.46"

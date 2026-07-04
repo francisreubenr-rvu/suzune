@@ -273,3 +273,31 @@ select {
 @media (prefers-color-scheme: dark) {
   .status--ok { color: #9ac07f; }
 }
+
+/* ---------- first-run setup ---------- */
+
+.setup__lede { line-height: 1.6; max-width: 46ch; margin-bottom: 1.6rem; }
+
+.setup__status { display: flex; flex-direction: column; gap: 0.8rem; max-width: 40rem; }
+
+.setup__line { font-family: var(--mono); font-size: 0.92rem; color: var(--ink-soft); }
+.setup__line--ok { color: #4a6b3a; font-style: normal; }
+.setup__line--err { color: var(--accent); }
+
+.setup__bar {
+  height: 10px;
+  border-radius: 5px;
+  background: var(--paper-deep);
+  border: 1px solid var(--rule);
+  overflow: hidden;
+}
+.setup__fill {
+  height: 100%;
+  background: var(--accent);
+  border-radius: 5px 0 0 5px;
+  transition: width 240ms ease;
+}
+
+@media (prefers-color-scheme: dark) {
+  .setup__line--ok { color: #9ac07f; }
+}

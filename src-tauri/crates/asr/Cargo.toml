@@ -6,7 +6,20 @@ edition = "2021"
 [dependencies]
 anyhow = { workspace = true }
 log = { workspace = true }
-transcribe-rs = { version = "0.3.8", features = ["whisper-metal", "onnx"] }
+# ONNX (Parakeet) is shared across platforms; the whisper.cpp GPU backend
+# is selected per-target below so the crate builds on macOS, Windows, and
+# Linux without a Metal-only feature blocking the non-Mac builds. Cargo
+# unions the base features with the active target's table.
+transcribe-rs = { version = "0.3.8", features = ["onnx"] }
+
+[target.'cfg(target_os = "macos")'.dependencies]
+transcribe-rs = { version = "0.3.8", features = ["whisper-metal"] }
+
+[target.'cfg(target_os = "windows")'.dependencies]
+transcribe-rs = { version = "0.3.8", features = ["whisper-vulkan", "ort-directml"] }
+
+[target.'cfg(target_os = "linux")'.dependencies]
+transcribe-rs = { version = "0.3.8", features = ["whisper-vulkan"] }
 
 [dev-dependencies]
 hound = "3.5.1"

@@ -1,4 +1,5 @@
 mod coordinator;
+mod models;
 mod settings;
 
 use coordinator::{Command, Coordinator};
@@ -48,8 +49,10 @@ fn save_settings(
     register_shortcut(&app, &new_settings.shortcut)
         .map_err(|e| format!("Could not register shortcut: {e}"))?;
 
-    app.state::<Coordinator>()
-        .send(Command::ReloadSettings(Box::new(new_settings)));
+    if app.try_state::<Coordinator>().is_some() {
+        app.state::<Coordinator>()
+            .send(Command::ReloadSettings(Box::new(new_settings)));
+    }
     Ok(())
 }
 
@@ -60,8 +63,34 @@ fn list_input_devices() -> Vec<String> {
 }
 
 #[tauri::command]
-fn cancel_dictation(coordinator: tauri::State<Coordinator>) {
-    coordinator.send(Command::Cancel);
+fn cancel_dictation(state: tauri::State<SettingsState>, app: AppHandle) {
+    // The coordinator may not exist yet during first-run download.
+    if app.try_state::<Coordinator>().is_some() {
+        app.state::<Coordinator>().send(Command::Cancel);
+    }
+    let _ = state; // keep signature stable for the UI
+}
+
+/// True while the app is still fetching first-run models (the setup UI
+/// polls this on mount to decide whether to show the download screen).
+#[tauri::command]
+fn needs_setup(state: tauri::State<SettingsState>, app: AppHandle) -> bool {
+    if app.try_state::<Coordinator>().is_some() {
+        return false; // engine already running
+    }
+    let s = state.settings.lock().unwrap();
+    !models::models_present(&s.models_root, &s.cleanup_model)
+}
+
+/// Start the dictation engine and register the global shortcut. Called once
+/// the models are present — immediately at launch, or after the first-run
+/// download completes.
+fn finish_startup(app: &AppHandle, settings: &Settings) -> tauri::Result<()> {
+    let coordinator = Coordinator::start(app.clone(), settings.clone());
+    app.manage(coordinator);
+    register_shortcut(app, &settings.shortcut)?;
+    log::info!("dictation engine started");
+    Ok(())
 }
 
 /// (Re)register the global dictation shortcut. Unregisters any previous
@@ -151,7 +180,17 @@ pub fn run() {
             app.set_activation_policy(tauri::ActivationPolicy::Accessory);
 
             let config_dir = app.path().app_config_dir()?;
-            let settings = Settings::load(&config_dir);
+            let mut settings = Settings::load(&config_dir);
+
+            // Resolve the models directory: keep the user's configured
+            // location if the models are actually there; otherwise point at
+            // the app-data dir (self-contained, cross-platform) where the
+            // first-run download will place them.
+            if !models::models_present(&settings.models_root, &settings.cleanup_model) {
+                if let Ok(default_root) = models::default_models_root(app.handle()) {
+                    settings.models_root = default_root;
+                }
+            }
             settings.save(&config_dir)?; // materialize defaults for the user
 
             create_overlay(app.handle())?;
@@ -187,15 +226,42 @@ pub fn run() {
                 });
             }
 
-            let coordinator = Coordinator::start(app.handle().clone(), settings.clone());
-            app.manage(coordinator);
-
-            // Shared, editable settings for the shortcut handler and UI.
+            // Shared, editable settings for the shortcut handler and UI —
+            // managed immediately so the settings/setup windows work even
+            // before the coordinator starts.
             app.manage(SettingsState {
                 settings: Mutex::new(settings.clone()),
                 config_dir: config_dir.clone(),
                 toggle_recording: Arc::new(AtomicBool::new(false)),
             });
+
+            // Start the dictation engine now if the models are present;
+            // otherwise download them first (first-run) and start after.
+            if models::models_present(&settings.models_root, &settings.cleanup_model) {
+                finish_startup(app.handle(), &settings)?;
+            } else {
+                log::info!("first run: models missing, starting download flow");
+                if let Some(w) = app.get_webview_window("main") {
+                    let _ = w.show();
+                    let _ = w.set_focus();
+                }
+                let handle = app.handle().clone();
+                let settings_for_dl = settings.clone();
+                std::thread::spawn(move || {
+                    let root = settings_for_dl.models_root.clone();
+                    match models::ensure_models(&handle, &root, &settings_for_dl.cleanup_model) {
+                        Ok(()) => {
+                            if let Err(e) = finish_startup(&handle, &settings_for_dl) {
+                                models::emit_error(&handle, format!("startup failed: {e}"));
+                            }
+                        }
+                        Err(e) => {
+                            log::error!("model download failed: {e:#}");
+                            models::emit_error(&handle, format!("{e}"));
+                        }
+                    }
+                });
+            }
 
             // WHISPR_SELFTEST=record: drive one real record->cancel cycle
             // through the coordinator shortly after launch. Exercises the
@@ -210,8 +276,6 @@ pub fn run() {
                     handle.state::<Coordinator>().send(Command::StopAndProcess);
                 });
             }
-
-            register_shortcut(app.handle(), &settings.shortcut)?;
 
             // WHISPR_SELFTEST=savetest: exercise the save_settings path
             // (persist + re-register shortcut + reload) without the UI, to
@@ -252,7 +316,8 @@ pub fn run() {
             get_settings,
             save_settings,
             list_input_devices,
-            cancel_dictation
+            cancel_dictation,
+            needs_setup
         ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");

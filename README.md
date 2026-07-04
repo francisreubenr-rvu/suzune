@@ -23,16 +23,19 @@ Measured on a MacBook M1 Pro (16GB): a 10-second utterance transcribes in ~400ms
 
 ## Status
 
-Early but functional. macOS only for now (the architecture — Rust + Tauri 2 — is portable, and Linux/Windows are planned). Settings are read from `settings.json` (created on first run in the app config directory); the in-app settings editor is in progress.
+Early but functional. Built and tested on macOS; the codebase is written to build on Windows and Linux too (the whisper.cpp GPU backend is selected per-target — Metal on macOS, Vulkan/DirectML on Windows, Vulkan on Linux — and text injection uses the platform paste keystroke). Those builds are feasible but unverified for now.
+
+On first launch whispr fetches its on-device models automatically (a progress screen shows the download once, then never again) into the app data directory — nothing to install by hand. Settings are editable in-app from the tray: hotkey, push-to-talk vs continuous mode, text-placement method, microphone, and the cleanup pass.
 
 | Setting | Default | Meaning |
 |---|---|---|
-| `shortcut` | `alt+space` | Global dictation hotkey |
-| `push_to_talk` | `true` | Hold-to-talk; `false` = press to toggle |
+| `shortcut` | `alt+space` | Global dictation hotkey (editable in-app) |
+| `push_to_talk` | `true` | `true` = hold to talk; `false` = continuous (press to start/stop) |
+| `injection_method` | `clipboard` | `clipboard` (reliable everywhere incl. terminals/Electron), `ax` (write-only, no clipboard, some apps unsupported), or `type` |
 | `cleanup_enabled` | `true` | Local LLM cleanup pass on/off |
 | `cleanup_model` | `Qwen2.5-1.5B-Instruct-Q4_K_M.gguf` | GGUF under `models_root` |
 | `input_device` | `null` | Pin an exact input-device name (defeats macOS Continuity grabbing the default mic for a nearby iPhone) |
-| `models_root` | — | Folder holding the ASR / VAD / LLM model files |
+| `models_root` | app data dir | Folder holding the model files; the first-run download populates it |
 
 ## Building
 
