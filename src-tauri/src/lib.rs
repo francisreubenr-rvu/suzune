@@ -3,19 +3,101 @@ mod settings;
 
 use coordinator::{Command, Coordinator};
 use settings::Settings;
+use std::sync::atomic::{AtomicBool, Ordering};
+use std::sync::{Arc, Mutex};
 use tauri::menu::{Menu, MenuItem};
 use tauri::tray::TrayIconBuilder;
-use tauri::{Manager, WebviewUrl, WebviewWindowBuilder};
+use tauri::{AppHandle, Manager, WebviewUrl, WebviewWindowBuilder};
 use tauri_plugin_global_shortcut::{GlobalShortcutExt, ShortcutState};
 
+/// Live app settings, shared between the shortcut handler, the settings
+/// window, and the config directory on disk. Behind a Mutex so the
+/// settings UI can edit them at runtime.
+struct SettingsState {
+    settings: Mutex<Settings>,
+    config_dir: std::path::PathBuf,
+    /// Continuous-mode recording flag, shared across shortcut
+    /// re-registrations so a mode change mid-session can't strand it.
+    toggle_recording: Arc<AtomicBool>,
+}
+
 #[tauri::command]
-fn get_settings(state: tauri::State<Settings>) -> Settings {
-    state.inner().clone()
+fn get_settings(state: tauri::State<SettingsState>) -> Settings {
+    state.settings.lock().unwrap().clone()
+}
+
+/// Persist edited settings, apply the shortcut/mode live, and tell the
+/// coordinator to reload the rest. Returns an error string the UI shows.
+#[tauri::command]
+fn save_settings(
+    app: AppHandle,
+    state: tauri::State<SettingsState>,
+    new_settings: Settings,
+) -> Result<(), String> {
+    // Validate the shortcut before committing anything.
+    let _: tauri_plugin_global_shortcut::Shortcut = new_settings
+        .shortcut
+        .parse()
+        .map_err(|e| format!("Invalid shortcut '{}': {e}", new_settings.shortcut))?;
+
+    new_settings
+        .save(&state.config_dir)
+        .map_err(|e| format!("Could not save settings: {e}"))?;
+    *state.settings.lock().unwrap() = new_settings.clone();
+
+    register_shortcut(&app, &new_settings.shortcut)
+        .map_err(|e| format!("Could not register shortcut: {e}"))?;
+
+    app.state::<Coordinator>()
+        .send(Command::ReloadSettings(Box::new(new_settings)));
+    Ok(())
+}
+
+/// List available input-device names so the settings UI can offer a picker.
+#[tauri::command]
+fn list_input_devices() -> Vec<String> {
+    whispr_audio::input_device_names()
 }
 
 #[tauri::command]
 fn cancel_dictation(coordinator: tauri::State<Coordinator>) {
     coordinator.send(Command::Cancel);
+}
+
+/// (Re)register the global dictation shortcut. Unregisters any previous
+/// binding first, then installs a handler that reads the current mode from
+/// shared state on each key event — so both the hotkey and push-to-talk vs
+/// continuous mode can change at runtime without an app restart.
+fn register_shortcut(app: &AppHandle, shortcut_str: &str) -> tauri::Result<()> {
+    use tauri_plugin_global_shortcut::Shortcut;
+    let shortcut: Shortcut = shortcut_str
+        .parse()
+        .map_err(|e| tauri::Error::Anyhow(anyhow::anyhow!("parse shortcut: {e}")))?;
+
+    let gs = app.global_shortcut();
+    let _ = gs.unregister_all();
+
+    gs.on_shortcut(shortcut, move |app, _shortcut, event| {
+        let state = app.state::<SettingsState>();
+        let push_to_talk = state.settings.lock().unwrap().push_to_talk;
+        let coordinator = app.state::<Coordinator>();
+        if push_to_talk {
+            match event.state() {
+                ShortcutState::Pressed => coordinator.send(Command::StartRecording),
+                ShortcutState::Released => coordinator.send(Command::StopAndProcess),
+            }
+        } else if event.state() == ShortcutState::Pressed {
+            // Continuous mode: each press toggles recording on/off.
+            let now_recording = !state.toggle_recording.fetch_xor(true, Ordering::SeqCst);
+            coordinator.send(if now_recording {
+                Command::StartRecording
+            } else {
+                Command::StopAndProcess
+            });
+        }
+    })
+    .map_err(|e| tauri::Error::Anyhow(anyhow::anyhow!("register shortcut: {e}")))?;
+    Ok(())
 }
 
 /// Small always-on-top pill, bottom-center of the primary monitor.
@@ -108,6 +190,13 @@ pub fn run() {
             let coordinator = Coordinator::start(app.handle().clone(), settings.clone());
             app.manage(coordinator);
 
+            // Shared, editable settings for the shortcut handler and UI.
+            app.manage(SettingsState {
+                settings: Mutex::new(settings.clone()),
+                config_dir: config_dir.clone(),
+                toggle_recording: Arc::new(AtomicBool::new(false)),
+            });
+
             // WHISPR_SELFTEST=record: drive one real record->cancel cycle
             // through the coordinator shortly after launch. Exercises the
             // overlay + mic path without a human at the keyboard (used for
@@ -122,38 +211,49 @@ pub fn run() {
                 });
             }
 
-            let push_to_talk = settings.push_to_talk;
-            let shortcut: tauri_plugin_global_shortcut::Shortcut =
-                settings.shortcut.parse().map_err(|e| {
-                    anyhow::anyhow!("invalid shortcut '{}': {}", settings.shortcut, e)
-                })?;
-            app.global_shortcut().on_shortcut(shortcut, {
-                // Toggle mode tracks recording locally; the coordinator
-                // ignores redundant commands so drift is self-correcting.
-                let toggle_recording = std::sync::atomic::AtomicBool::new(false);
-                move |app, _shortcut, event| {
-                    let coordinator = app.state::<Coordinator>();
-                    if push_to_talk {
-                        match event.state() {
-                            ShortcutState::Pressed => coordinator.send(Command::StartRecording),
-                            ShortcutState::Released => coordinator.send(Command::StopAndProcess),
-                        }
-                    } else if event.state() == ShortcutState::Pressed {
-                        let now_recording = !toggle_recording
-                            .fetch_xor(true, std::sync::atomic::Ordering::SeqCst);
-                        coordinator.send(if now_recording {
-                            Command::StartRecording
-                        } else {
-                            Command::StopAndProcess
-                        });
-                    }
-                }
-            })?;
+            register_shortcut(app.handle(), &settings.shortcut)?;
 
-            app.manage(settings);
+            // WHISPR_SELFTEST=savetest: exercise the save_settings path
+            // (persist + re-register shortcut + reload) without the UI, to
+            // verify hotkey/mode changes apply live.
+            if std::env::var("WHISPR_SELFTEST").as_deref() == Ok("savetest") {
+                let handle = app.handle().clone();
+                std::thread::spawn(move || {
+                    std::thread::sleep(std::time::Duration::from_secs(3));
+                    let state = handle.state::<SettingsState>();
+                    let mut new = state.settings.lock().unwrap().clone();
+                    new.push_to_talk = false;
+                    new.shortcut = "ctrl+alt+d".to_string();
+                    new.injection_method = "ax".to_string();
+                    let _ = new.save(&state.config_dir);
+                    *state.settings.lock().unwrap() = new.clone();
+                    match register_shortcut(&handle, &new.shortcut) {
+                        Ok(()) => log::info!("savetest: re-registered {} ok", new.shortcut),
+                        Err(e) => log::error!("savetest: re-register failed: {e}"),
+                    }
+                    handle
+                        .state::<Coordinator>()
+                        .send(Command::ReloadSettings(Box::new(new)));
+                    log::info!("savetest: applied continuous mode + ctrl+alt+d + ax");
+                });
+            }
+
+            // WHISPR_SHOW_SETTINGS=1: open the settings window on launch
+            // (for visual verification without clicking the tray).
+            if std::env::var("WHISPR_SHOW_SETTINGS").is_ok() {
+                if let Some(w) = app.get_webview_window("main") {
+                    let _ = w.show();
+                    let _ = w.set_focus();
+                }
+            }
             Ok(())
         })
-        .invoke_handler(tauri::generate_handler![get_settings, cancel_dictation])
+        .invoke_handler(tauri::generate_handler![
+            get_settings,
+            save_settings,
+            list_input_devices,
+            cancel_dictation
+        ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");
 }

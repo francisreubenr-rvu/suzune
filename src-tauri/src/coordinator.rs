@@ -17,6 +17,10 @@ pub enum Command {
     StartRecording,
     StopAndProcess,
     Cancel,
+    /// Apply edited settings without restarting the app. Injection method,
+    /// input device, and cleanup on/off take effect immediately; changing
+    /// the ASR engine or model still needs a restart (noted in the UI).
+    ReloadSettings(Box<Settings>),
 }
 
 /// Event payload emitted to the webview as "dictation-state".
@@ -78,6 +82,7 @@ fn worker(app: AppHandle, settings: Settings, rx: Receiver<Command>) {
             Command::StartRecording => w.start_recording(),
             Command::StopAndProcess => w.stop_and_process(),
             Command::Cancel => w.cancel(),
+            Command::ReloadSettings(s) => w.reload_settings(*s),
         }
     }
 }
@@ -222,7 +227,11 @@ impl Worker {
             },
             None => raw.clone(),
         };
-        let method = whispr_inject::inject_auto(&text)
+        // Log only lengths, never the content — this is a privacy tool and
+        // the app log is not a place for the user's dictated words.
+        log::info!("transcript: {} chars raw -> {} chars cleaned", raw.len(), text.len());
+        let primary = whispr_inject::InjectionMethod::from_setting(&self.settings.injection_method);
+        let method = whispr_inject::inject_auto_with_primary(&text, primary)
             .map_err(|e| anyhow::anyhow!("injection: {}", e))?;
         Ok(Some((text, format!("{:?}", method))))
     }
@@ -232,5 +241,28 @@ impl Worker {
             let _ = r.stop();
         }
         self.emit(StateEvent::Idle);
+    }
+
+    /// Apply live-editable settings. The cleanup server is (re)started or
+    /// torn down to match `cleanup_enabled`; injection method and input
+    /// device are simply read from `self.settings` on the next dictation.
+    fn reload_settings(&mut self, new: Settings) {
+        let cleanup_was = self.settings.cleanup_enabled;
+        let port_changed = new.cleanup_port != self.settings.cleanup_port;
+        let model_changed = new.cleanup_model != self.settings.cleanup_model;
+        self.settings = new;
+
+        if !self.settings.cleanup_enabled {
+            // Turning cleanup off: drop the client and kill the server.
+            self.cleanup = None;
+            self._llama = None;
+        } else if !cleanup_was || port_changed || model_changed || self.cleanup.is_none() {
+            // Turning cleanup on, or its server config changed: restart it.
+            self.cleanup = None;
+            self._llama = None;
+            self.start_cleanup_if_enabled();
+        }
+        log::info!("settings reloaded (injection={}, ptt={})",
+            self.settings.injection_method, self.settings.push_to_talk);
     }
 }

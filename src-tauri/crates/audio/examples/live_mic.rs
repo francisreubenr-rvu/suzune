@@ -8,7 +8,7 @@
 use std::time::Duration;
 use whispr_audio::Recorder;
 
-const SECONDS: u64 = 3;
+const SECONDS: u64 = 8;
 
 fn main() -> anyhow::Result<()> {
     env_logger::init();

@@ -206,6 +206,19 @@ impl Drop for Recorder {
     }
 }
 
+/// Names of all available input devices, for the settings UI mic picker.
+/// Returns an empty list if the host cannot be enumerated.
+pub fn input_device_names() -> Vec<String> {
+    let host = cpal::default_host();
+    match host.input_devices() {
+        Ok(devices) => devices.filter_map(|d| d.name().ok()).collect(),
+        Err(e) => {
+            log::warn!("whispr-audio: could not list input devices: {e}");
+            Vec::new()
+        }
+    }
+}
+
 fn classify_device_error(msg: &str) -> anyhow::Error {
     let normalized = msg.to_lowercase();
     if normalized.contains("access is denied")
