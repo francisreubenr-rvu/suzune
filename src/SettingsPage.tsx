@@ -84,7 +84,7 @@ export default function SettingsPage() {
   return (
     <main className="page">
       <header className="page__masthead">
-        <h1>whispr</h1>
+        <h1>fude</h1>
         <p className="page__tagline">Local voice dictation. Nothing leaves your machine.</p>
       </header>
 

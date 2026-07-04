@@ -1,6 +1,6 @@
 # Wispr Flow — Technical Architecture Research
 
-Research date: 2026-07-03. Compiled for the `whispr` project (local/open-source alternative to Wispr Flow).
+Research date: 2026-07-03. Compiled for the `fude` project (local/open-source alternative to Wispr Flow).
 
 All claims are sourced. Where a claim is Wispr's own marketing/documentation, it is marked **[Wispr-stated]**. Where it comes from a third-party reviewer, blog, or reverse-engineering effort, it is marked **[Reviewer/third-party]** — treat as unverified speculation, not fact. Where nothing public was found, it is marked **[UNKNOWN]**.
 
@@ -68,7 +68,7 @@ All claims are sourced. Where a claim is Wispr's own marketing/documentation, it
   - Wispr Flow banned the user who raised the issue; CTO Sahaj Garg later apologized publicly for the ban — which is treated by the reporting source as an implicit confirmation the underlying privacy concern had merit.
   - Following the incident, Wispr added Privacy Mode (explicit "nothing stored" mode), made AI-training use explicit opt-in (previously implied opt-out), and pursued SOC2/HIPAA/ISO27001 certification.
   - Source is a third-party blog analysis (ModelPiper), not Wispr's own account — treat the narrative framing as the author's interpretation. The article also notes: compliance certifications attest to *stored*-data handling, not to what happens to data *in transit/during processing*, and there is no user-facing audit mechanism to verify Privacy Mode actually results in zero retention. [[Wispr Flow Privacy Incident — ModelPiper]](https://modelpiper.com/blog/wispr-flow-privacy-incident) [Reviewer/third-party]
-  - **This incident could not be cross-verified against a second independent source in this research pass** — flagging as single-sourced. Recommend independent verification before citing as established fact in the whispr project's own materials.
+  - **This incident could not be cross-verified against a second independent source in this research pass** — flagging as single-sourced. Recommend independent verification before citing as established fact in the fude project's own materials.
 
 ## 7. Platform support and pricing
 
@@ -102,7 +102,7 @@ All claims are sourced. Where a claim is Wispr's own marketing/documentation, it
 
 ---
 
-## Key implications for the `whispr` local-alternative project
+## Key implications for the `fude` local-alternative project
 
 1. Wispr Flow has **no on-device/offline transcription mode at all** — cloud dependency is total. This is the clearest differentiation opportunity for a local-first alternative.
 2. Their stated latency budget (700ms end-to-end, 200/200/200ms split) is a useful target to benchmark against, but it is self-reported, not independently measured — build your own benchmark rather than trusting it as ground truth.

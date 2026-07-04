@@ -8,9 +8,9 @@ use anyhow::Result;
 use serde::Serialize;
 use std::sync::mpsc::{Receiver, Sender};
 use tauri::{AppHandle, Emitter};
-use whispr_asr::{Engine, EngineKind};
-use whispr_audio::Recorder;
-use whispr_cleanup::{CleanupClient, LlamaServer, LlamaServerConfig};
+use fude_asr::{Engine, EngineKind};
+use fude_audio::Recorder;
+use fude_cleanup::{CleanupClient, LlamaServer, LlamaServerConfig};
 
 #[derive(Debug)]
 pub enum Command {
@@ -45,7 +45,7 @@ impl Coordinator {
     pub fn start(app: AppHandle, settings: Settings) -> Coordinator {
         let (tx, rx) = std::sync::mpsc::channel();
         std::thread::Builder::new()
-            .name("whispr-coordinator".into())
+            .name("fude-coordinator".into())
             .spawn(move || worker(app, settings, rx))
             .expect("spawn coordinator thread");
         Coordinator { tx }
@@ -128,7 +128,7 @@ impl Worker {
             return;
         }
         let gguf = self.settings.models_root.join(&self.settings.cleanup_model);
-        let log_path = std::env::temp_dir().join("whispr-llama-server.log");
+        let log_path = std::env::temp_dir().join("fude-llama-server.log");
         match LlamaServer::spawn(LlamaServerConfig {
             server_binary_path: self.settings.llama_server_path.clone(),
             model_gguf_path: gguf,
@@ -190,7 +190,7 @@ impl Worker {
     /// for a future hands-free mode).
     fn process(&mut self, mut recorder: Recorder) -> Result<Option<(String, String)>> {
         let audio = recorder.stop()?;
-        if audio.len() < whispr_audio::FRAME_SAMPLES * 10 {
+        if audio.len() < fude_audio::FRAME_SAMPLES * 10 {
             return Ok(None); // <300ms: accidental tap
         }
         let peak = audio.iter().fold(0.0f32, |m, s| m.max(s.abs()));
@@ -230,8 +230,8 @@ impl Worker {
         // Log only lengths, never the content — this is a privacy tool and
         // the app log is not a place for the user's dictated words.
         log::info!("transcript: {} chars raw -> {} chars cleaned", raw.len(), text.len());
-        let primary = whispr_inject::InjectionMethod::from_setting(&self.settings.injection_method);
-        let method = whispr_inject::inject_auto_with_primary(&text, primary)
+        let primary = fude_inject::InjectionMethod::from_setting(&self.settings.injection_method);
+        let method = fude_inject::inject_auto_with_primary(&text, primary)
             .map_err(|e| anyhow::anyhow!("injection: {}", e))?;
         Ok(Some((text, format!("{:?}", method))))
     }

@@ -1,5 +1,5 @@
 [package]
-name = "whispr-audio"
+name = "fude-audio"
 version = "0.1.0"
 edition = "2021"
 

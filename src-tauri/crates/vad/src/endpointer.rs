@@ -65,7 +65,7 @@ pub struct Endpointer<V: SpeechProbability> {
 
 impl<V: SpeechProbability> Endpointer<V> {
     /// `frame_ms` is the duration of one frame pushed to [`Endpointer::push`]
-    /// (30ms for whispr's pipeline). Thresholds are rounded up to whole
+    /// (30ms for fude's pipeline). Thresholds are rounded up to whole
     /// frames.
     pub fn new(
         vad: V,

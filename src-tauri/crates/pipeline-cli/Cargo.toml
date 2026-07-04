@@ -1,11 +1,11 @@
 [package]
-name = "whispr-pipeline-cli"
+name = "fude-pipeline-cli"
 version = "0.1.0"
 edition = "2021"
 
 [dependencies]
 anyhow = { workspace = true }
 hound = "3.5.1"
-whispr-audio = { path = "../audio" }
-whispr-vad = { path = "../vad" }
-whispr-asr = { path = "../asr" }
+fude-audio = { path = "../audio" }
+fude-vad = { path = "../vad" }
+fude-asr = { path = "../asr" }

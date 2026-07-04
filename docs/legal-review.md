@@ -1,6 +1,6 @@
 # Legal Review
 
-A plain-language risk assessment for whispr. Not legal advice; consult a
+A plain-language risk assessment for fude. Not legal advice; consult a
 qualified attorney before any public launch or commercial distribution.
 
 ## Summary table
@@ -11,14 +11,14 @@ qualified attorney before any public launch or commercial distribution.
 | Model licenses (Parakeet, Qwen2.5) | Low | Resolved — both permit commercial use + redistribution with attribution; attributed in `THIRD_PARTY_NOTICES.md` |
 | Code attribution (Handy, crates) | Low | Resolved — Handy (MIT) and dependencies attributed |
 | False advertising / defamation | Low | Resolved by design — only measured figures; generic "cloud dictation tools" phrasing; the single-sourced 2025 privacy incident is not cited |
-| **Name: "whispr" vs "Wispr Flow"** | **Elevated** | **Open — requires your decision (see below)** |
+| Name / trademark | Low (was Elevated) | Resolved — renamed from "whispr" to "fude"; see below and `naming-decision.md` |
 | Model hosting dependency | Low/operational | Noted — first-run download of Parakeet uses a public community mirror; self-host before a wide public launch |
 
 ## Details
 
 ### 1. Software and model licenses (resolved)
 
-- whispr's own code is now MIT-licensed (`LICENSE`).
+- fude's own code is now MIT-licensed (`LICENSE`).
 - Parakeet TDT 0.6B v2 is **CC-BY-4.0** (© NVIDIA): commercial use and
   redistribution allowed with attribution. Attribution present.
 - Qwen2.5-1.5B-Instruct is **Apache-2.0** (© Alibaba Cloud): commercial use
@@ -37,30 +37,27 @@ qualified attorney before any public launch or commercial distribution.
 - Comparisons use the generic phrase "cloud dictation tools," name no
   competitor, reproduce no competitor logo, and claim no affiliation.
 - The 2025 Wispr Flow privacy incident is single-sourced and is deliberately
-  **not** referenced in any whispr material, avoiding defamation risk.
+  **not** referenced in any fude material, avoiding defamation risk.
 - An independence/trademark disclaimer is in the README.
 
-### 3. The name — elevated risk, your call
+### 3. The name — resolved by renaming to "fude"
 
-"whispr" is one letter from **"Wispr"** (Wispr AI's product, "Wispr Flow"),
-and whispr is positioned as a direct alternative to it. Under trademark law,
-the test is *likelihood of confusion*, and a near-identical name in the same
-product category is the classic fact pattern for a dispute. "whispr" also
-evokes OpenAI's "Whisper" speech model, though that term is more descriptive.
+The project was originally called **whispr**, which was one letter from
+**"Wispr"** (Wispr AI's "Wispr Flow") and evoked OpenAI's "Whisper" — a
+likelihood-of-confusion risk given the identical product category. That name
+has been retired.
 
-This cannot be resolved in code. Options, roughly in order of safety:
+The product is now **fude** (筆, Japanese for "writing brush"), chosen by a
+three-seat naming council for phonetic fit, meaning, and — critically —
+verified availability: no voice/dictation/AI product or software trademark
+uses it, and it shares no letters or sounds with Whisper/Wispr. Full rationale
+and the disqualified alternatives are in `naming-decision.md`. This removes the
+trademark objection to going public.
 
-1. **Rename** before any public launch (e.g. a distinct coined word). Safest.
-2. **Keep the name but stay private / personal-use**, which is the current
-   posture (repo is private, nothing published). Low exposure while not
-   public.
-3. **Keep the name and launch publicly** after a trademark clearance search
-   and, ideally, counsel sign-off. Highest exposure without that.
-
-Recommendation: do not make the repository public, publish the landing page,
-or post the announcement under this name until you have decided on 1–3. The
-deliverables are prepared but held for your go-ahead precisely so this
-decision is yours.
+Residual good practice before or shortly after a public launch: run a formal
+USPTO/registrar trademark clearance on "fude" in the software class (the
+availability check here was web-search-based, not a registrar lookup), and
+secure the GitHub/npm/domain handles you care about.
 
 ### 4. Model hosting (operational)
 

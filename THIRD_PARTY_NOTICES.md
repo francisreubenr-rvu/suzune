@@ -1,6 +1,6 @@
 # Third-Party Notices
 
-whispr is distributed under the MIT License (see `LICENSE`). It builds on
+fude is distributed under the MIT License (see `LICENSE`). It builds on
 open-source software and on-device models that carry their own licenses.
 Those licenses are reproduced or linked below, and their attribution
 requirements are honored here.
@@ -18,12 +18,12 @@ Attribution: **Parakeet TDT 0.6B v2 © NVIDIA, licensed under CC-BY-4.0**
 (https://huggingface.co/nvidia/parakeet-tdt-0.6b-v2). **Qwen2.5-1.5B-Instruct
 © Alibaba Cloud, licensed under Apache-2.0**
 (https://huggingface.co/Qwen/Qwen2.5-1.5B-Instruct). Model files are fetched
-from their publishers at first run; whispr does not host or redistribute the
+from their publishers at first run; fude does not host or redistribute the
 model weights.
 
 ## Architecture and code
 
-whispr's process architecture adapts patterns from **Handy**
+fude's process architecture adapts patterns from **Handy**
 (https://github.com/cjpais/Handy), MIT License, © cjpais — specifically the
 audio capture/worker structure, the single-threaded transcription
 coordinator, the model idle-unload approach, and the clipboard
@@ -43,7 +43,7 @@ https://github.com/cjpais/Handy/blob/main/LICENSE)
 
 ## Rust and JavaScript dependencies
 
-whispr depends on the Tauri framework and Rust/JS crates including
+fude depends on the Tauri framework and Rust/JS crates including
 `transcribe-rs`, `cpal`, `rubato`, `hound`, `enigo`, `arboard`,
 `accessibility-sys`, `core-foundation`, `ureq`, `serde`, `flate2`, `tar`,
 `vad-rs`, React, and Vite. These are distributed under permissive licenses
@@ -61,5 +61,5 @@ redistributed.
 
 The transcript-cleanup pass runs the model through a local `llama-server`
 (llama.cpp, MIT License, © The ggml authors and contributors,
-https://github.com/ggml-org/llama.cpp). whispr invokes it as a local server;
+https://github.com/ggml-org/llama.cpp). fude invokes it as a local server;
 it is not redistributed as part of this repository.

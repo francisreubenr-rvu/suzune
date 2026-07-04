@@ -1,4 +1,4 @@
-//! Voice activity detection and utterance endpointing for whispr.
+//! Voice activity detection and utterance endpointing for fude.
 //!
 //! See [`vad::Vad`] for the Silero model wrapper (a version-compatibility
 //! note there explains why v4, not v5, is wired up) and [`endpointer`] for

@@ -69,7 +69,7 @@ Qwen3-4B (~2.5GB resident) was too heavy alongside the user's other apps. Re-ran
 
 Prompt v3.1 (now production in `crates/cleanup/src/prompt.rs`): self-correction rule moved first with stronger deletion wording + an extra "no wait" example — fixed sample #18 for the small model. Residual imperfections: #7 keeps the corrected-away clause as a separate sentence; #9 drops three words. Judged acceptable; fine-tuning not required.
 
-Measured RSS after the swap: whispr 1177MB (Parakeet resident + webview) + llama-server 1091MB = ~2.27GB total, down from ~3.8GB with Qwen3-4B.
+Measured RSS after the swap: fude 1177MB (Parakeet resident + webview) + llama-server 1091MB = ~2.27GB total, down from ~3.8GB with Qwen3-4B.
 
 ### Robustness fixes from live testing (same session)
 

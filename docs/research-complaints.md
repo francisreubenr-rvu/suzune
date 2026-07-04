@@ -1,6 +1,6 @@
 # Wispr Flow: Weaknesses, Complaints, and Competitive Landscape
 
-Research date: 2026-07-03. Compiled for the `whispr` project (local, open-source alternative to Wispr Flow). All claims are sourced; anecdotal/thin evidence is flagged as such.
+Research date: 2026-07-03. Compiled for the `fude` project (local, open-source alternative to Wispr Flow). All claims are sourced; anecdotal/thin evidence is flagged as such.
 
 ---
 
@@ -78,7 +78,7 @@ Research date: 2026-07-03. Compiled for the `whispr` project (local, open-source
 | **VoiceInk** | Local by default | $39 one-time, or free (open source) | macOS, iOS | GPLv3 open source; custom "writing modes"; called "strongest overall Mac/iOS alternative" for local + transparency + lifetime pricing |
 | **Aqua Voice** | Cloud-only, no offline mode | $8/mo ($96/yr); free tier = 1,000 words one-time | macOS, Windows, iPhone | Strong on technical/coding vocabulary, 800-entry custom dictionary, SOC2 Type II; privacy policy silent on AI training, stores transcripts by default unless Privacy Mode enabled |
 | **Talon** | Local (voice control focus) | Not detailed in results | macOS, Linux, Windows | Broader than dictation — full voice control, eye tracking, Python scripting; targets developers/accessibility users, not a drop-in Wispr replacement |
-| **Handy** (github.com/cjpais/Handy) | 100% local/offline | **Free, MIT license, no subscription/account/word limits** | Windows, macOS, **Linux** | Cross-platform (Tauri/Rust + React), 23,000+ GitHub stars, push-to-talk workflow, bundles Whisper (Small/Medium/Turbo/Large), NVIDIA Parakeet V2/V3, Moonshine, and accepts custom GGML models. Explicitly positioned as "most forkable," not "best" — a direct architectural precedent for the `whispr` project. [GitHub](https://github.com/cjpais/Handy) |
+| **Handy** (github.com/cjpais/Handy) | 100% local/offline | **Free, MIT license, no subscription/account/word limits** | Windows, macOS, **Linux** | Cross-platform (Tauri/Rust + React), 23,000+ GitHub stars, push-to-talk workflow, bundles Whisper (Small/Medium/Turbo/Large), NVIDIA Parakeet V2/V3, Moonshine, and accepts custom GGML models. Explicitly positioned as "most forkable," not "best" — a direct architectural precedent for the `fude` project. [GitHub](https://github.com/cjpais/Handy) |
 | **Better Dictation** | Not researched in depth this pass | — | — | Insufficient search evidence returned; needs a follow-up pass if this competitor matters to positioning |
 | **Apple built-in dictation** | Local (recent macOS/iOS versions) | Free (bundled with OS) | macOS, iOS | Not directly compared in sources surfaced this pass; commonly cited elsewhere as lower accuracy/fewer features than third-party tools, but no citation captured here — do not state as fact without further sourcing |
 

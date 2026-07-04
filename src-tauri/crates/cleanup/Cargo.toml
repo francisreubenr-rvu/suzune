@@ -1,5 +1,5 @@
 [package]
-name = "whispr-cleanup"
+name = "fude-cleanup"
 version = "0.1.0"
 edition = "2021"
 

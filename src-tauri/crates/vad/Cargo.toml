@@ -1,5 +1,5 @@
 [package]
-name = "whispr-vad"
+name = "fude-vad"
 version = "0.1.0"
 edition = "2021"
 

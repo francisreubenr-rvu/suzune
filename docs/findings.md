@@ -1,6 +1,6 @@
-# whispr — Consolidated Findings
+# fude — Consolidated Findings
 
-Authoritative synthesis of three research reports for the `whispr` project (fully local, open-source, privacy-respecting alternative to Wispr Flow; target hardware MacBook M1 Pro, 16GB).
+Authoritative synthesis of three research reports for the `fude` project (fully local, open-source, privacy-respecting alternative to Wispr Flow; target hardware MacBook M1 Pro, 16GB).
 
 Compiled: 2026-07-03. Sources:
 - `docs/research-architecture.md` (how Wispr Flow works)
@@ -47,7 +47,7 @@ Target: full transcription + LLM formatting within 700ms of speech-stop.
 
 Developer **Ryan Shrott** (late 2025) monitored network traffic, found Wispr Flow transmitting audio + periodic active-window screenshots to cloud servers including third-party infrastructure (reported as OpenAI) without clear prior disclosure. Wispr initially **banned the reporting user**; CTO **Sahaj Garg** later publicly apologized for the ban — widely read as implicit confirmation the finding had merit. Post-incident, Wispr added Privacy Mode (ZDR), flipped AI-training to opt-out->opt-in-off-by-default, and pursued SOC2/HIPAA/ISO27001.
 
-**Caveat:** primary narrative traces to a single third-party blog (ModelPiper); the complaints report corroborates the ban/apology via Voibe but the core technical finding is effectively single-sourced. **Recommend independent verification before whispr cites this as established fact.** [ModelPiper](https://modelpiper.com/blog/wispr-flow-privacy-incident); [Voibe](https://www.getvoibe.com/resources/wispr-flow-review/)
+**Caveat:** primary narrative traces to a single third-party blog (ModelPiper); the complaints report corroborates the ban/apology via Voibe but the core technical finding is effectively single-sourced. **Recommend independent verification before fude cites this as established fact.** [ModelPiper](https://modelpiper.com/blog/wispr-flow-privacy-incident); [Voibe](https://www.getvoibe.com/resources/wispr-flow-review/)
 
 ### 1.4 Cross-report contradictions (flagged)
 
@@ -60,11 +60,11 @@ Developer **Ryan Shrott** (late 2025) monitored network traffic, found Wispr Flo
 
 ---
 
-## 2. Wispr Flow's weaknesses, ranked by exploitability for whispr
+## 2. Wispr Flow's weaknesses, ranked by exploitability for fude
 
 Ranked by how directly a local-first open-source tool can beat each.
 
-| Rank | Weakness | Evidence strength | How whispr beats it |
+| Rank | Weakness | Evidence strength | How fude beats it |
 |---|---|---|---|
 | 1 | **No verifiable local/offline desktop processing.** Audio always leaves the machine; even Privacy Mode is a policy promise with no user-facing audit path. | Strong — corroborated across eesel AI, ModelPiper, Voibe + Wispr's own privacy page | 100% on-device ASR + local LLM cleanup. Nothing leaves the machine — architecturally verifiable, not a policy promise. The core differentiator. |
 | 2 | **Subscription-only pricing, no lifetime tier.** $15/mo ($12 annual); "most expensive standalone macOS productivity sub"; compounds to $720/5yr. | Strong — Voibe pricing, direct user quotes | Free / open-source (MIT-class). No account, no word limits, no recurring cost — matches Handy's positioning. |
@@ -85,16 +85,16 @@ Ranked by how directly a local-first open-source tool can beat each.
 | **Superwhisper** | 100% local (on-device Whisper) | $249.99 lifetime | macOS (primary) | Reddit's privacy-first pick; Mac-centric; paid |
 | **MacWhisper** | 100% local | Not specified in sources | macOS | File/recording transcription, **not** real-time system-wide dictation — different use case |
 | **VoiceInk** | Local by default | $39 one-time, or free (GPLv3 OSS) | macOS, iOS | "Strongest overall Mac/iOS alternative"; custom writing modes; open + lifetime |
-| **Handy** (`cjpais/Handy`) | 100% local/offline | Free, MIT, no account/limits | Windows, macOS, **Linux** | 23k+ stars; Tauri/Rust; bundles Whisper + Parakeet + Moonshine; **direct architectural precedent for whispr** |
+| **Handy** (`cjpais/Handy`) | 100% local/offline | Free, MIT, no account/limits | Windows, macOS, **Linux** | 23k+ stars; Tauri/Rust; bundles Whisper + Parakeet + Moonshine; **direct architectural precedent for fude** |
 | **Apple dictation** (SFSpeechRecognizer) | Local (recent OS) | Free (bundled) | macOS, iOS | ~10 langs on-device; no continuous on-device learning; ~1-min practical buffer limit; no WER published; weaker/fewer features (widely cited, not sourced this pass) |
 | **Talon** | Local (voice-control focus) | Not detailed in sources | macOS, Linux, Windows | Full voice control + eye tracking + Python scripting; targets accessibility/devs; **not** a drop-in dictation replacement |
 | **Aqua Voice** (context) | Cloud-only, no offline | $8-10/mo; free tier 1,000 words | macOS, Windows, iPhone | Strong technical/code vocab, 800-entry dictionary; stores transcripts by default |
 
-**Positioning [Judgment]:** whispr's open competitive slot is "Handy's local-first architecture + an *embedded* local LLM cleanup layer that Handy lacks + Wispr-grade formatting UX." No existing tool combines fully-local ASR, fully-local LLM edit pass, cross-platform, and free/OSS in one polished package.
+**Positioning [Judgment]:** fude's open competitive slot is "Handy's local-first architecture + an *embedded* local LLM cleanup layer that Handy lacks + Wispr-grade formatting UX." No existing tool combines fully-local ASR, fully-local LLM edit pass, cross-platform, and free/OSS in one polished package.
 
 ---
 
-## 4. Recommended technical direction for whispr
+## 4. Recommended technical direction for fude
 
 Decisive recommendations. Conflicts between reports resolved inline.
 
@@ -144,7 +144,7 @@ This is the layer **Handy lacks** (its biggest gap: no embedded runtime; every n
 Adopt Handy's dual strategy, harden the Mac path:
 - **Default: clipboard-save -> write transcript -> Cmd+V (layout-independent keycode) -> restore clipboard.** Fast, robust across apps. Accept the known small window where dictated text sits in the system clipboard (mitigated by save/restore).
 - **Alternative: direct typing** (`enigo.text`) — no clipboard round-trip, but slower/drop-prone for long text.
-- **[Judgment] Add a macOS fallback Handy lacks:** attempt Accessibility-API direct insertion (AXUIElement `setValue`/`insertText`) first for supported apps, clipboard-paste as fallback — mirroring Wispr's own primary+fallback shape and reducing clipboard exposure. Handy has no secondary macOS strategy if Accessibility permission is revoked mid-session; whispr should degrade gracefully.
+- **[Judgment] Add a macOS fallback Handy lacks:** attempt Accessibility-API direct insertion (AXUIElement `setValue`/`insertText`) first for supported apps, clipboard-paste as fallback — mirroring Wispr's own primary+fallback shape and reducing clipboard exposure. Handy has no secondary macOS strategy if Accessibility permission is revoked mid-session; fude should degrade gracefully.
 - Optional auto-submit (Return variants) after paste, as Handy does.
 - **Privacy positioning:** request the **minimum** Accessibility scope and document it — directly countering Wispr's keystroke-read controversy (weakness #8).
 
@@ -168,11 +168,11 @@ Memory:          idle-unload ASR model between bursts (16GB budget)
 | # | Question | Why it matters | Evidence gap |
 |---|---|---|---|
 | Q1 | Does Parakeet ONNX actually get **CoreML/Metal acceleration on Mac**, or is it CPU-bound like in Handy? | Determines whether Parakeet or WhisperKit is the true default; drives latency budget. | Handy exposes no Metal/CoreML ORT EP; unverified without runtime testing. Requires a Mac benchmark. |
-| Q2 | **Real measured end-to-end latency** on M1 Pro for the chosen stack (capture-stop -> injected text). | Wispr's 700ms is self-reported and unmeasured; whispr needs its own benchmark, not a borrowed target. | No independent Wispr measurement exists; no whispr measurement yet. |
+| Q2 | **Real measured end-to-end latency** on M1 Pro for the chosen stack (capture-stop -> injected text). | Wispr's 700ms is self-reported and unmeasured; fude needs its own benchmark, not a borrowed target. | No independent Wispr measurement exists; no fude measurement yet. |
 | Q3 | Which **1-3B cleanup model + prompt** actually removes fillers/formats without hallucinating or over-editing? | The edit pass is the quality differentiator; no benchmarked filler-removal model exists. | No dedicated model found in research; needs empirical prompt/model bake-off. |
 | Q4 | **Streaming (Moonshine v2) in v1 or defer to v2?** | Affects UX (live partial captions) vs implementation complexity (backtracking UI). | Judgment says defer; needs a product-UX decision. |
-| Q5 | **Screenshot/on-screen context feature** — build a fully-local version, or omit entirely? | Wispr's context-awareness drives accuracy on proper nouns but is its biggest privacy liability. | whispr could do it 100% locally (local OCR/vision) — scope/feasibility undecided. |
-| Q6 | **macOS Accessibility scope** — can whispr do write-only injection (AXUIElement insert) without broad read access? | Directly counters Wispr's keystroke-read controversy; a marketing/trust point. | Feasibility per-app unverified; needs testing across target apps. |
-| Q7 | **Licensing check for Parakeet** (CC-BY-4.0 NGC) and each shipped checkpoint for commercial/OSS redistribution. | whispr is open-source; must confirm redistribution rights per model. | "verify per-checkpoint license before commercial use" flagged but not resolved. |
-| Q8 | **Independent verification of the 2025 privacy incident** before whispr cites it in its own materials. | Core competitive narrative rests on a single third-party source. | Could not cross-verify against a second independent source. |
+| Q5 | **Screenshot/on-screen context feature** — build a fully-local version, or omit entirely? | Wispr's context-awareness drives accuracy on proper nouns but is its biggest privacy liability. | fude could do it 100% locally (local OCR/vision) — scope/feasibility undecided. |
+| Q6 | **macOS Accessibility scope** — can fude do write-only injection (AXUIElement insert) without broad read access? | Directly counters Wispr's keystroke-read controversy; a marketing/trust point. | Feasibility per-app unverified; needs testing across target apps. |
+| Q7 | **Licensing check for Parakeet** (CC-BY-4.0 NGC) and each shipped checkpoint for commercial/OSS redistribution. | fude is open-source; must confirm redistribution rights per model. | "verify per-checkpoint license before commercial use" flagged but not resolved. |
+| Q8 | **Independent verification of the 2025 privacy incident** before fude cites it in its own materials. | Core competitive narrative rests on a single third-party source. | Could not cross-verify against a second independent source. |
 | Q9 | **Fork Handy vs greenfield build?** | Handy is MIT and a near-exact architectural match ("most forkable"); forking saves months but inherits its gaps. | Judgment leans fork-and-extend; needs an explicit decision. |

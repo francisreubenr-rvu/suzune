@@ -50,7 +50,7 @@ export default function Overlay() {
     <div
       className={`pill pill--${dictation.state}`}
       onClick={cancel}
-      title={dictation.state === "recording" ? "Click to cancel" : "whispr"}
+      title={dictation.state === "recording" ? "Click to cancel" : "fude"}
     >
       {dictation.state === "recording" && (
         <>

@@ -1472,6 +1472,96 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "42703706b716c37f96a77aea830392ad231f44c9e9a67872fa5548707e11b11c"
 
 [[package]]
+name = "fude"
+version = "0.1.0"
+dependencies = [
+ "anyhow",
+ "env_logger 0.11.11",
+ "flate2",
+ "fude-asr",
+ "fude-audio",
+ "fude-cleanup",
+ "fude-inject",
+ "fude-vad",
+ "log",
+ "serde",
+ "serde_json",
+ "tar",
+ "tauri",
+ "tauri-build",
+ "tauri-plugin-global-shortcut",
+ "tauri-plugin-opener",
+ "ureq 2.12.1",
+]
+
+[[package]]
+name = "fude-asr"
+version = "0.1.0"
+dependencies = [
+ "anyhow",
+ "hound",
+ "log",
+ "transcribe-rs",
+]
+
+[[package]]
+name = "fude-audio"
+version = "0.1.0"
+dependencies = [
+ "anyhow",
+ "cpal",
+ "crossbeam-channel",
+ "env_logger 0.11.11",
+ "log",
+ "rubato",
+]
+
+[[package]]
+name = "fude-cleanup"
+version = "0.1.0"
+dependencies = [
+ "anyhow",
+ "env_logger 0.11.11",
+ "log",
+ "serde",
+ "serde_json",
+ "ureq 2.12.1",
+]
+
+[[package]]
+name = "fude-inject"
+version = "0.1.0"
+dependencies = [
+ "accessibility-sys",
+ "anyhow",
+ "arboard",
+ "core-foundation",
+ "enigo",
+ "env_logger 0.11.11",
+ "log",
+]
+
+[[package]]
+name = "fude-pipeline-cli"
+version = "0.1.0"
+dependencies = [
+ "anyhow",
+ "fude-asr",
+ "fude-audio",
+ "fude-vad",
+ "hound",
+]
+
+[[package]]
+name = "fude-vad"
+version = "0.1.0"
+dependencies = [
+ "anyhow",
+ "log",
+ "vad-rs",
+]
+
+[[package]]
 name = "futures-channel"
 version = "0.3.32"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -5528,96 +5618,6 @@ dependencies = [
  "cmake",
  "fs_extra",
  "semver",
-]
-
-[[package]]
-name = "whispr"
-version = "0.1.0"
-dependencies = [
- "anyhow",
- "env_logger 0.11.11",
- "flate2",
- "log",
- "serde",
- "serde_json",
- "tar",
- "tauri",
- "tauri-build",
- "tauri-plugin-global-shortcut",
- "tauri-plugin-opener",
- "ureq 2.12.1",
- "whispr-asr",
- "whispr-audio",
- "whispr-cleanup",
- "whispr-inject",
- "whispr-vad",
-]
-
-[[package]]
-name = "whispr-asr"
-version = "0.1.0"
-dependencies = [
- "anyhow",
- "hound",
- "log",
- "transcribe-rs",
-]
-
-[[package]]
-name = "whispr-audio"
-version = "0.1.0"
-dependencies = [
- "anyhow",
- "cpal",
- "crossbeam-channel",
- "env_logger 0.11.11",
- "log",
- "rubato",
-]
-
-[[package]]
-name = "whispr-cleanup"
-version = "0.1.0"
-dependencies = [
- "anyhow",
- "env_logger 0.11.11",
- "log",
- "serde",
- "serde_json",
- "ureq 2.12.1",
-]
-
-[[package]]
-name = "whispr-inject"
-version = "0.1.0"
-dependencies = [
- "accessibility-sys",
- "anyhow",
- "arboard",
- "core-foundation",
- "enigo",
- "env_logger 0.11.11",
- "log",
-]
-
-[[package]]
-name = "whispr-pipeline-cli"
-version = "0.1.0"
-dependencies = [
- "anyhow",
- "hound",
- "whispr-asr",
- "whispr-audio",
- "whispr-vad",
-]
-
-[[package]]
-name = "whispr-vad"
-version = "0.1.0"
-dependencies = [
- "anyhow",
- "log",
- "vad-rs",
 ]
 
 [[package]]

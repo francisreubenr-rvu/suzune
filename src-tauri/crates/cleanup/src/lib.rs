@@ -1,4 +1,4 @@
-//! whispr-cleanup: embedded llama-server process management plus an
+//! fude-cleanup: embedded llama-server process management plus an
 //! OpenAI-compatible chat-completions client for LLM-based dictation
 //! cleanup (filler removal, self-corrections, punctuation).
 

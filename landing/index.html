@@ -3,11 +3,11 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>whispr — press a key, speak, get clean text</title>
-<meta name="description" content="whispr is a fully local voice-dictation app for macOS. Nothing ever leaves your machine.">
+<title>fude — press a key, speak, get clean text</title>
+<meta name="description" content="fude is a fully local voice-dictation app for macOS. Nothing ever leaves your machine.">
 <style>
 /* ==========================================================================
-   whispr landing page — paperback theme
+   fude landing page — paperback theme
    Design tokens lifted verbatim from src/App.css so the marketing page and
    the product share one visual language.
    ========================================================================== */
@@ -751,12 +751,12 @@ footer {
 <div class="grid-layer" id="gridLayer" aria-hidden="true"></div>
 
 <nav class="nav">
-  <div class="nav__brand">whispr<span class="dot">.</span></div>
+  <div class="nav__brand">fude<span class="dot">.</span></div>
   <div class="nav__links">
     <a href="#how">How it works</a>
     <a href="#privacy">Privacy</a>
     <a href="#numbers">Numbers</a>
-    <a class="btn" href="https://github.com/francisreubenr-rvu/whispr" target="_blank" rel="noopener">GitHub</a>
+    <a class="btn" href="https://github.com/francisreubenr-rvu/fude" target="_blank" rel="noopener">GitHub</a>
   </div>
 </nav>
 
@@ -767,11 +767,11 @@ footer {
     <div class="container hero">
       <div>
         <span class="label hero__eyebrow">100% on-device · macOS</span>
-        <h1>whispr<span class="dot">.</span></h1>
+        <h1>fude<span class="dot">.</span></h1>
         <p class="hero__tagline">Press a key, speak, get clean text in any app. Nothing ever leaves your machine.</p>
 
         <div class="hero__cta">
-          <a class="btn btn--accent" href="https://github.com/francisreubenr-rvu/whispr" target="_blank" rel="noopener">View on GitHub</a>
+          <a class="btn btn--accent" href="https://github.com/francisreubenr-rvu/fude" target="_blank" rel="noopener">View on GitHub</a>
           <div class="hero__hotkey">
             hold <kbd>⌥</kbd> + <kbd>Space</kbd> to talk
           </div>
@@ -792,7 +792,7 @@ footer {
           <div class="book__face book__spine"></div>
           <div class="book__face book__pages"></div>
           <div class="book__face book__cover">
-            <div class="book__title">whispr<span class="dot">.</span></div>
+            <div class="book__title">fude<span class="dot">.</span></div>
             <div class="book__sub">local voice dictation</div>
           </div>
         </div>
@@ -875,7 +875,7 @@ footer {
           </ul>
         </div>
         <div class="contrast__col contrast__col--us">
-          <div class="contrast__title">whispr</div>
+          <div class="contrast__title">fude</div>
           <ul>
             <li><span class="contrast__mark">+</span> Audio never leaves the device</li>
             <li><span class="contrast__mark">+</span> No screenshots, no screen context of any kind</li>
@@ -885,7 +885,7 @@ footer {
           </ul>
         </div>
       </div>
-      <p class="contrast__foot">whispr asks for exactly two macOS permissions — Microphone and Accessibility — and both stay on your machine. A network-permission-free build is the proof, not the pitch.</p>
+      <p class="contrast__foot">fude asks for exactly two macOS permissions — Microphone and Accessibility — and both stay on your machine. A network-permission-free build is the proof, not the pitch.</p>
     </div>
   </section>
 
@@ -929,10 +929,10 @@ footer {
   <div class="container">
     <hr class="rule--double" style="margin-bottom: 1.6rem;">
     <div class="footer__row">
-      <div class="footer__brand">whispr<span class="dot" style="color: var(--accent);">.</span></div>
+      <div class="footer__brand">fude<span class="dot" style="color: var(--accent);">.</span></div>
       <div class="footer__meta">
         <span>MIT License</span>
-        <a href="https://github.com/francisreubenr-rvu/whispr" target="_blank" rel="noopener">github.com/francisreubenr-rvu/whispr</a>
+        <a href="https://github.com/francisreubenr-rvu/fude" target="_blank" rel="noopener">github.com/francisreubenr-rvu/fude</a>
       </div>
     </div>
     <p class="footer__hand">handmade, local-first.</p>
@@ -947,7 +947,7 @@ footer {
 
 <script>
 /* ==========================================================================
-   whispr landing page — vanilla JS behaviors
+   fude landing page — vanilla JS behaviors
    1. 3D book tilt on mouse move (hero)
    2. Scroll-linked parallax on the background grid layer
    3. IntersectionObserver-driven section reveals
@@ -1013,7 +1013,7 @@ footer {
   var demoBox = document.getElementById("demoBox");
   var demoText = document.getElementById("demoText");
 
-  // Raw dictation, word by word, flagged for deletion where whispr's
+  // Raw dictation, word by word, flagged for deletion where fude's
   // cleanup pass would strip a filler/stutter.
   var RAW = [
     { w: "um", drop: true },

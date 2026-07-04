@@ -1,4 +1,4 @@
-# whispr — Implementation Plan
+# fude — Implementation Plan
 
 Status: **DRAFT — awaiting user approval. No implementation until approved.**
 Basis: `docs/findings.md` (phase 1 synthesis). Target: MacBook M1 Pro, 16GB, fully local.
@@ -9,7 +9,7 @@ Basis: `docs/findings.md` (phase 1 synthesis). Target: MacBook M1 Pro, 16GB, ful
 
 One sentence: **press a key, speak, get clean formatted text in any app — and nothing ever leaves your machine.**
 
-whispr = Handy's local-first architecture + the embedded local LLM cleanup layer Handy lacks + Wispr-grade formatting UX + a distinctive paperback visual identity. Free, open-source (MIT).
+fude = Handy's local-first architecture + the embedded local LLM cleanup layer Handy lacks + Wispr-grade formatting UX + a distinctive paperback visual identity. Free, open-source (MIT).
 
 ### v1 scope (and nothing more)
 
@@ -69,9 +69,9 @@ Crate layout (Cargo workspace inside Tauri `src-tauri/`):
 Adopted from Handy verbatim (patterns, not code-paste): coordinator state machine, idle-unload watcher, SHA256-verified resumable model downloads, `catch_unwind` around engine calls, 30ms hotkey debounce.
 Done better than Handy: embedded LLM runtime (no Ollata dependency), Silero v5, CoreML/Metal execution-provider verification for Parakeet (spike S1), AX-insert injection fallback, distinctive UI.
 
-## 4. How whispr beats Wispr Flow (mapped to findings weakness table)
+## 4. How fude beats Wispr Flow (mapped to findings weakness table)
 
-| Wispr weakness (rank) | whispr answer |
+| Wispr weakness (rank) | fude answer |
 |---|---|
 | No verifiable local processing (1) | 100% on-device by architecture; open source = auditable; a network-permission-free build is the proof |
 | Subscription-only (2) | Free, MIT, no account, no word limits |
@@ -116,7 +116,7 @@ Subagent policy (quota-aware): max 3 concurrent Sonnet agents, only on file-disj
 
 | # | Decision | Recommendation |
 |---|---|---|
-| D1 | Fork Handy vs greenfield | **Greenfield Tauri app, porting Handy's proven patterns with attribution in README/NOTICE.** Forking inherits 24k-star project's UI/identity and gaps; whispr's value is a distinct product. MIT permits pattern/code reuse with attribution. |
+| D1 | Fork Handy vs greenfield | **Greenfield Tauri app, porting Handy's proven patterns with attribution in README/NOTICE.** Forking inherits 24k-star project's UI/identity and gaps; fude's value is a distinct product. MIT permits pattern/code reuse with attribution. |
 | D2 | Cleanup LLM ships bundled or downloaded on first run | **Downloaded on first run via model manager** (keeps repo/app small; same UX as ASR models). |
 | D3 | v1 platform scope | **macOS-only v1**, portable architecture. Cross-platform now would triple injection/hotkey work before product validation. |
 | D4 | Cite the 2025 privacy incident in marketing/LinkedIn? | **No — single-sourced.** Lead with "architecturally verifiable privacy" instead; no claims about Wispr we can't prove (aligns with zero-fabrication rule). |

@@ -1,13 +1,13 @@
 //! Integration test: loads the real Parakeet v2 model from the models root
 //! on this machine and transcribes a real sample WAV. Marked `#[ignore]` so
 //! `cargo test` stays fast without the model present; run explicitly with
-//! `cargo test -p whispr-asr -- --ignored`.
+//! `cargo test -p fude-asr -- --ignored`.
 
 use std::path::{Path, PathBuf};
 
-use whispr_asr::{Engine, EngineKind};
+use fude_asr::{Engine, EngineKind};
 
-const MODELS_ROOT: &str = "/Volumes/1TB SSD/LM/whispr-models";
+const MODELS_ROOT: &str = "/Volumes/1TB SSD/LM/fude-models";
 
 fn sample_wav_path() -> PathBuf {
     // CARGO_MANIFEST_DIR = .../src-tauri/crates/asr

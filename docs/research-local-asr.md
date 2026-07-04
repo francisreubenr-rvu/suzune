@@ -1,4 +1,4 @@
-# Local ASR Stack Research — whispr (M1 Pro, 16GB)
+# Local ASR Stack Research — fude (M1 Pro, 16GB)
 
 Date: 2026-07-03
 Scope: reference-implementation study (Handy) + web research on local ASR/VAD/LLM options for a Wispr Flow alternative on Apple Silicon.
@@ -85,7 +85,7 @@ Files: `llm_client.rs`, `apple_intelligence.rs`, `settings.rs:520-613`.
 - Broad engine support (8 backends) gives real accuracy/speed/language tradeoffs to the user rather than betting on one model.
 - Native-tool fallback chains on Linux (wtype/ydotool/xdotool/etc.) show attention to platform quirks — macOS injection is comparatively thin (enigo only).
 
-**Weaknesses / gaps relevant to building "whispr"**
+**Weaknesses / gaps relevant to building "fude"**
 - No embedded local LLM for cleanup — relies on external Ollama or cloud APIs except for Apple Intelligence (Mac-only, requires specific OS/hardware support, quality/latency characteristics not user-controllable).
 - ONNX/Parakeet path has no explicit CoreML/Metal execution provider surfaced in settings — likely CPU-bound on Mac despite the model itself being fast; unverified without runtime testing.
 - No streaming/partial-transcript UX for Whisper/Parakeet (only the dedicated Moonshine "Streaming" variant does incremental decode) — meaning perceived latency for the dominant engines is capture-stop → full-buffer transcribe → paste, not live partial captions.

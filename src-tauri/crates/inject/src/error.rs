@@ -10,7 +10,7 @@ pub enum InjectError {
     /// The macOS Accessibility permission has not been granted to this
     /// process. The caller should tell the user to grant it in
     /// System Settings > Privacy & Security > Accessibility, then retry.
-    /// whispr-inject never auto-prompts for this permission.
+    /// fude-inject never auto-prompts for this permission.
     AccessibilityPermissionDenied,
     /// There is no focused UI element to write into, or the system-wide
     /// focused element could not be resolved.

@@ -1,8 +1,8 @@
 {
   "$schema": "https://schema.tauri.app/config/2",
-  "productName": "whispr",
+  "productName": "fude",
   "version": "0.1.0",
-  "identifier": "dev.whispr.app",
+  "identifier": "dev.fude.app",
   "build": {
     "beforeDevCommand": "bun run dev",
     "devUrl": "http://localhost:1420",
@@ -13,7 +13,7 @@
     "windows": [
       {
         "label": "main",
-        "title": "whispr",
+        "title": "fude",
         "width": 760,
         "height": 560,
         "visible": false,

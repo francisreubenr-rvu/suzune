@@ -35,7 +35,7 @@ impl Drop for AxElement {
 
 pub(crate) fn ax_insert(text: &str) -> Result<(), InjectError> {
     // AXIsProcessTrusted() never prompts; it only reports current status.
-    // whispr-inject never auto-prompts for accessibility permission.
+    // fude-inject never auto-prompts for accessibility permission.
     if !unsafe { AXIsProcessTrusted() } {
         return Err(InjectError::AccessibilityPermissionDenied);
     }

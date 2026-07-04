@@ -1,5 +1,5 @@
 {
-  "project": "whispr",
+  "project": "fude",
   "updated": "2026-07-03",
   "tasks": [
     {
@@ -61,7 +61,7 @@
     {
       "id": "P3-implementation",
       "phase": 3,
-      "title": "Implement whispr per approved plan (task breakdown to be expanded from plan)",
+      "title": "Implement fude per approved plan (task breakdown to be expanded from plan)",
       "status": "in_progress",
       "blockedBy": [
         "P2-approval"
@@ -79,7 +79,7 @@
     {
       "id": "P5-demo-video",
       "phase": 5,
-      "title": "Demo video of whispr in use",
+      "title": "Demo video of fude in use",
       "status": "done",
       "blockedBy": [
         "P3-implementation"
