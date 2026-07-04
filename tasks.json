@@ -71,7 +71,7 @@
       "id": "P4-landing-page",
       "phase": 4,
       "title": "3D animated marketing landing page (separate dir/branch)",
-      "status": "next",
+      "status": "done",
       "blockedBy": [
         "P2-approval"
       ]

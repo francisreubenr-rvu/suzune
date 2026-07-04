@@ -722,6 +722,15 @@ footer {
   font-style: italic;
 }
 
+.footer__legal {
+  margin-top: 1.4rem;
+  max-width: 52rem;
+  font-size: 0.72rem;
+  line-height: 1.6;
+  color: var(--ink-soft);
+  opacity: 0.75;
+}
+
 /* ---------- parallax grid layer ---------- */
 
 .grid-layer {
@@ -927,6 +936,12 @@ footer {
       </div>
     </div>
     <p class="footer__hand">handmade, local-first.</p>
+    <p class="footer__legal">
+      An independent open-source project, not affiliated with or endorsed by
+      any dictation vendor. Product names are trademarks of their owners, used
+      for identification only. All figures are measurements on the author's own
+      hardware.
+    </p>
   </div>
 </footer>
 
@@ -1004,7 +1019,7 @@ footer {
     { w: "um", drop: true },
     { w: "so", drop: true },
     { w: "basically", drop: true },
-    { w: "i", cap: "So" },
+    { w: "i", cap: "I" },
     { w: "think" },
     { w: "we" },
     { w: "should" },
@@ -1026,7 +1041,7 @@ footer {
       // Skip the animated build and show the end state directly.
       demoText.innerHTML =
         '<span class="strike">um so basically</span> ' +
-        '<span class="clean">So I think we should move the meeting to Thursday.</span>';
+        '<span class="clean">I think we should move the meeting to Thursday.</span>';
       return;
     }
 
