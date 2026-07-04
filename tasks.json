@@ -80,7 +80,7 @@
       "id": "P5-demo-video",
       "phase": 5,
       "title": "Demo video of whispr in use",
-      "status": "pending",
+      "status": "done",
       "blockedBy": [
         "P3-implementation"
       ]
@@ -89,7 +89,7 @@
       "id": "P5-linkedin-post",
       "phase": 5,
       "title": "LinkedIn announcement post",
-      "status": "pending",
+      "status": "done_draft_held",
       "blockedBy": [
         "P3-implementation"
       ]

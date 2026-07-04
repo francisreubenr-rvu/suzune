@@ -277,6 +277,19 @@ pub fn run() {
                 });
             }
 
+            // WHISPR_SELFTEST=demo: record a fixed 8s window starting 6s
+            // after launch, for producing a demo capture with externally
+            // synced audio playback.
+            if std::env::var("WHISPR_SELFTEST").as_deref() == Ok("demo") {
+                let handle = app.handle().clone();
+                std::thread::spawn(move || {
+                    std::thread::sleep(std::time::Duration::from_secs(6));
+                    handle.state::<Coordinator>().send(Command::StartRecording);
+                    std::thread::sleep(std::time::Duration::from_secs(8));
+                    handle.state::<Coordinator>().send(Command::StopAndProcess);
+                });
+            }
+
             // WHISPR_SELFTEST=savetest: exercise the save_settings path
             // (persist + re-register shortcut + reload) without the UI, to
             // verify hotkey/mode changes apply live.

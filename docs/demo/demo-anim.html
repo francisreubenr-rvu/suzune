@@ -1,0 +1,196 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<style>
+  :root {
+    --paper: #211d18; --paper-2: #1a1712; --ink: #e8ddc9; --ink-soft: #a3937a;
+    --rule: #3d362c; --accent: #d07a5a;
+    --serif: "Iowan Old Style","Palatino","Georgia",serif;
+    --mono: "SF Mono","Menlo",monospace;
+  }
+  * { margin:0; padding:0; box-sizing:border-box; }
+  html,body { width:1280px; height:720px; overflow:hidden; }
+  body {
+    font-family:var(--serif); color:var(--ink);
+    background:
+      linear-gradient(rgba(210,190,150,0.05) 1px, transparent 1px) 0 0 / 100% 34px,
+      linear-gradient(90deg, rgba(210,190,150,0.05) 1px, transparent 1px) 0 0 / 34px 100%,
+      var(--paper);
+    position:relative;
+  }
+  .stage { position:absolute; inset:0; }
+
+  /* editor card */
+  .editor {
+    position:absolute; left:190px; top:150px; width:900px; height:360px;
+    background:var(--paper-2); border:1px solid var(--rule);
+    border-radius:12px; box-shadow:0 24px 60px rgba(0,0,0,0.4);
+    padding:38px 44px;
+  }
+  .editor__chrome { position:absolute; top:16px; left:18px; display:flex; gap:8px; }
+  .editor__dot { width:11px; height:11px; border-radius:50%; background:var(--rule); }
+  .editor__label {
+    font-family:var(--mono); font-size:12px; letter-spacing:0.14em;
+    text-transform:uppercase; color:var(--ink-soft); margin-bottom:22px;
+  }
+  .editor__text { font-size:30px; line-height:1.5; min-height:120px; }
+  .word { transition:none; }
+  .word--drop { color:var(--accent); position:relative; }
+  .word--struck { text-decoration:line-through; opacity:0.5; }
+  .caret {
+    display:inline-block; width:2px; height:0.95em; background:var(--accent);
+    vertical-align:-0.12em; margin-left:1px;
+  }
+
+  /* floating pill */
+  .pill {
+    position:absolute; left:50%; transform:translateX(-50%);
+    bottom:96px; height:52px; padding:0 22px;
+    display:flex; align-items:center; gap:12px;
+    background:var(--paper); border:1px solid var(--rule);
+    border-radius:26px; box-shadow:0 10px 30px rgba(0,0,0,0.35);
+    font-style:italic; font-size:20px;
+  }
+  .pill__dot { width:12px; height:12px; border-radius:50%; background:var(--accent); }
+  .pill__quill { font-size:20px; color:var(--ink-soft); }
+  .pill__label--soft { color:var(--ink-soft); }
+
+  .hotkey {
+    position:absolute; left:50%; transform:translateX(-50%); bottom:104px;
+    font-family:var(--mono); font-size:16px; color:var(--ink-soft);
+    display:flex; align-items:center; gap:10px;
+  }
+  kbd {
+    font-family:var(--mono); font-size:15px; background:var(--paper-2);
+    border:1px solid var(--rule); border-bottom-width:2px; border-radius:5px;
+    padding:3px 10px;
+  }
+
+  /* brand + endcard */
+  .brand {
+    position:absolute; left:190px; top:70px;
+    font-style:italic; font-size:30px;
+  }
+  .brand .dot { color:var(--accent); }
+  .tag {
+    position:absolute; left:196px; top:118px; font-family:var(--mono);
+    font-size:12px; letter-spacing:0.16em; text-transform:uppercase; color:var(--ink-soft);
+  }
+  .endcard {
+    position:absolute; inset:0; display:flex; flex-direction:column;
+    align-items:center; justify-content:center; gap:14px;
+    background:var(--paper); opacity:0;
+  }
+  .endcard h1 { font-style:italic; font-size:74px; }
+  .endcard h1 .dot { color:var(--accent); }
+  .endcard p { font-family:var(--mono); font-size:16px; letter-spacing:0.14em; text-transform:uppercase; color:var(--ink-soft); }
+</style>
+</head>
+<body>
+<div class="stage">
+  <div class="brand">whispr<span class="dot">.</span></div>
+  <div class="tag">local voice dictation</div>
+
+  <div class="editor">
+    <div class="editor__chrome"><span class="editor__dot"></span><span class="editor__dot"></span><span class="editor__dot"></span></div>
+    <div class="editor__label">Untitled — TextEdit</div>
+    <div class="editor__text" id="text"></div>
+  </div>
+
+  <div class="hotkey" id="hotkey">hold <kbd>⌥</kbd> <kbd>Space</kbd> and speak</div>
+  <div class="pill" id="pill" style="display:none"></div>
+
+  <div class="endcard" id="endcard">
+    <h1>whispr<span class="dot">.</span></h1>
+    <p>100% on-device · nothing leaves your machine</p>
+  </div>
+</div>
+
+<script>
+// Deterministic time-driven animation: render(ms) fully sets the scene for
+// that instant, so a headless capturer can screenshot each frame by ms.
+// Raw dictation (with fillers + a self-correction) cleans into final text.
+var RAW = [
+  {w:"um", drop:true}, {w:"so", drop:true}, {w:"I"}, {w:"think"}, {w:"we"},
+  {w:"should"}, {w:"ship"}, {w:"this"}, {w:"on"}, {w:"friday", corr:true},
+  {w:"actually", drop:true}, {w:"no", drop:true}, {w:"monday", replaces:"friday"}
+];
+var CLEAN = "I think we should ship this on Monday.";
+
+var el = document.getElementById("text");
+var pill = document.getElementById("pill");
+var hotkey = document.getElementById("hotkey");
+var endcard = document.getElementById("endcard");
+
+// Timeline (ms):
+//  0- 900  hotkey hint
+//  900     press -> pill listening
+//  900-4200 raw words stream in as spoken
+//  4200-5000 pill "writing"; fillers strike + self-correction resolves
+//  5000-6600 cleaned text typed; pill "placed"
+//  6600-7000 pill fades
+//  7000-8200 endcard fade in
+function render(ms){
+  // hotkey hint
+  hotkey.style.display = ms < 900 ? "flex" : "none";
+
+  // pill state
+  if (ms >= 900 && ms < 6700){
+    pill.style.display = "flex";
+    if (ms < 4200){
+      pill.innerHTML = '<span class="pill__dot"></span><span>listening</span>';
+      var pulse = 0.6 + 0.4*Math.abs(Math.sin(ms/180));
+      pill.querySelector(".pill__dot").style.transform = "scale("+pulse+")";
+    } else if (ms < 5000){
+      pill.innerHTML = '<span class="pill__quill">&#9998;</span><span>writing</span>';
+    } else {
+      pill.innerHTML = '<span class="pill__label--soft">placed on the page</span>';
+    }
+  } else {
+    pill.style.display = "none";
+  }
+
+  // text content
+  if (ms < 4200){
+    // stream raw words
+    var shown = Math.floor((ms-900)/253); // ~13 words over 3300ms
+    if (shown < 0) shown = 0;
+    var html = "";
+    for (var i=0;i<Math.min(shown,RAW.length);i++){
+      html += '<span class="word">'+RAW[i].w+'</span> ';
+    }
+    if (shown < RAW.length) html += '<span class="caret"></span>';
+    el.innerHTML = html || '<span class="caret"></span>';
+    el.style.color = "var(--ink-soft)";
+  } else if (ms < 5000){
+    // strike fillers + correction
+    var html = "";
+    RAW.forEach(function(t){
+      var cls = "word";
+      if (t.drop || t.corr) cls += " word--struck";
+      html += '<span class="'+cls+'">'+t.w+'</span> ';
+    });
+    el.innerHTML = html;
+    el.style.color = "var(--ink-soft)";
+  } else if (ms < 6600){
+    // type cleaned text in ink
+    var n = Math.floor((ms-5000)/42);
+    var s = CLEAN.slice(0, Math.min(n, CLEAN.length));
+    el.style.color = "var(--ink)";
+    el.innerHTML = s + (n < CLEAN.length ? '<span class="caret"></span>' : '');
+  } else {
+    el.style.color = "var(--ink)";
+    el.innerHTML = CLEAN;
+  }
+
+  // endcard fade
+  endcard.style.opacity = ms > 7000 ? Math.min(1,(ms-7000)/700) : 0;
+}
+
+window.__render = render;
+var m = /[?&]ms=(\d+)/.exec(location.search);
+render(m ? parseInt(m[1],10) : 0);
+</script>
+</body>
+</html>
