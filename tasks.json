@@ -148,6 +148,18 @@
       "phase": 3,
       "title": "First-run model auto-download with progress UI",
       "status": "done"
+    },
+    {
+      "id": "P6-rename",
+      "phase": 6,
+      "title": "Rename whispr->fude (council-decided), rebuild, repo public",
+      "status": "done"
+    },
+    {
+      "id": "P6-public",
+      "phase": 6,
+      "title": "GitHub repo made public at francisreubenr-rvu/fude",
+      "status": "done"
     }
   ]
 }
