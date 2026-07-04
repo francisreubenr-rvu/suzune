@@ -26,3 +26,4 @@ dist-ssr
 dist/
 spikes/**/results-*.jsonl
 spikes/**/samples/*.wav
+*.dmg
