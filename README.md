@@ -62,4 +62,16 @@ The architecture owes a debt to [Handy](https://github.com/cjpais/Handy) (MIT) �
 
 ## License
 
-MIT
+MIT — see `LICENSE`. Third-party components and on-device models keep their
+own licenses; see `THIRD_PARTY_NOTICES.md` (Parakeet is CC-BY-4.0 © NVIDIA,
+Qwen2.5 is Apache-2.0 © Alibaba Cloud, architecture patterns adapted from
+Handy, MIT © cjpais).
+
+## Disclaimer
+
+whispr is an independent, open-source project. It is not affiliated with,
+endorsed by, or connected to Wispr AI, OpenAI, NVIDIA, Alibaba, or any other
+company. Product and company names mentioned are the trademarks of their
+respective owners and are used only for identification and comparison. All
+performance figures are measurements taken on the author's own hardware and
+are not claims about any third-party product.
