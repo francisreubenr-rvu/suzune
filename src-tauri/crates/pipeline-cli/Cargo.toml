@@ -9,3 +9,4 @@ hound = "3.5.1"
 suzune-audio = { path = "../audio" }
 suzune-vad = { path = "../vad" }
 suzune-asr = { path = "../asr" }
+suzune-cleanup = { path = "../cleanup" }

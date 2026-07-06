@@ -1,6 +1,6 @@
 {
   "project": "suzune",
-  "updated": "2026-07-03",
+  "updated": "2026-07-07",
   "tasks": [
     {
       "id": "P1-research-architecture",
@@ -160,6 +160,34 @@
       "phase": 6,
       "title": "GitHub repo made public at francisreubenr-rvu/suzune",
       "status": "done"
+    },
+    {
+      "id": "P7-model-cleanup",
+      "phase": 7,
+      "title": "Delete unused/rejected model files from models_root (~9.8GB reclaimed)",
+      "status": "done"
+    },
+    {
+      "id": "P7-M7-grammar-tone-modes",
+      "phase": 7,
+      "title": "Two-pass cleanup: grammar-strictness (Butler-Oxford) + optional tone restyle",
+      "status": "done",
+      "output": "docs/spike-results.md (S3 follow-up bake-off)"
+    },
+    {
+      "id": "P7-M7-personalization",
+      "phase": 7,
+      "title": "Opt-in personalization: correction capture, few-shot learning, personal vocabulary",
+      "status": "done"
+    },
+    {
+      "id": "P7-M7-lora-finetune",
+      "phase": 7,
+      "title": "M7 (future, designed not built): LoRA fine-tune on accumulated corrections once ~200+ entries exist, eval-gated before ever offered as a cleanup_model option",
+      "status": "not_started",
+      "blockedBy": [
+        "P7-M7-personalization"
+      ]
     }
   ]
 }

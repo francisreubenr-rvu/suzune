@@ -13,6 +13,7 @@ qualified attorney before any public launch or commercial distribution.
 | False advertising / defamation | Low | Resolved by design — only measured figures; generic "cloud dictation tools" phrasing; the single-sourced 2025 privacy incident is not cited |
 | Name / trademark | Low | Resolved — "suzune"; see below and `naming-decision.md` |
 | Model hosting dependency | Low/operational | Noted — first-run download of Parakeet uses a public community mirror; self-host before a wide public launch |
+| Personalization data storage | Low | Resolved by design — opt-in, off by default, local-only, user-clearable; see below |
 
 ## Details
 
@@ -58,3 +59,24 @@ The first-run downloader fetches the Parakeet ONNX build from a public
 community mirror. The model's CC-BY-4.0 license permits this, but before a
 wide public launch you should host the model files yourself (or pull from the
 publisher's own repository) rather than relying on a third party's bandwidth.
+
+### 5. Personalization data storage (resolved by design)
+
+The optional "History & personalization" feature is a real change to the
+app's prior stance of logging zero dictated content (previously: "log only
+lengths, never the content"). Mitigations, all already implemented:
+
+- **Opt-in, off by default** (`personalization_enabled: false`). Enabling it
+  stores nothing by itself — a rolling in-memory list of recent dictations
+  exists only while the app runs and is never written to disk.
+- **Only user-confirmed corrections are persisted**, to
+  `<app-config-dir>/corrections.jsonl` and a derived `vocabulary.json` — both
+  plain, human-readable local files, never transmitted anywhere (consistent
+  with "nothing leaves your machine": this is local storage, not network
+  transmission).
+- **User-inspectable and clearable** directly from the Settings window (a
+  "Your corrections" list and a "Clear all corrections" button), not just via
+  the filesystem.
+- No new legal exposure beyond ordinary local-file storage of the user's own
+  data — there is no collection, transmission, or third-party sharing of any
+  kind.

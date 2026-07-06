@@ -71,6 +71,70 @@ Prompt v3.1 (now production in `crates/cleanup/src/prompt.rs`): self-correction 
 
 Measured RSS after the swap: suzune 1177MB (Parakeet resident + webview) + llama-server 1091MB = ~2.27GB total, down from ~3.8GB with Qwen3-4B.
 
+### S3 follow-up — grammar/tone mode bake-off (2026-07-07)
+
+Harness: `crates/cleanup/examples/mode_bench.rs` — unlike bench.py/bench_v31.py
+(which duplicate the prompt text in Python), this links `suzune_cleanup`
+directly, so there is nothing to keep in sync as grammar/tone prompts evolve.
+Same 20 samples, same production model (Qwen2.5-1.5B-Instruct Q4_K_M), real
+`llama-server`, temperature 0. Run: all 20 samples x 5 grammar levels (Pass 1
+only, tone=Neutral) + all 20 samples x 4 non-neutral tones (Pass 1 at Standard
++ Pass 2 restyle) = 180 real calls. Results in `results-grammar-<level>.jsonl`
+/ `results-tone-<tone>.jsonl`.
+
+**Invariant safety rules (self-correction resolution, never-convert-to-code)
+— checked against every one of the 180 outputs, not just the two rule-1
+samples already in the baked-in few-shot set:**
+
+- Self-correction resolution (samples #2 "5pm actually no 6pm", #18 "seven pm
+  no wait nine pm"): **clean across all 9 mode combinations** (0/180
+  relevant checks failed) — confirms rule 1 holds across every grammar level
+  and every tone, not just the validated Casual/Standard baseline.
+- Never-convert-to-code (sample #16 "add a todo comment..."): **clean across
+  all 5 grammar levels** (Pass 1, 100/100 calls) — the invariant rule 5 guard
+  holds at every strictness level. **Not fully clean in Pass 2**: found and
+  fixed one real gap — the tone-restyle prompt had no code-conversion guard
+  of its own (it's an independent prompt, so it didn't inherit Pass 1's rule
+  5). Before the fix, `tone-enthusiastic` converted sample #7 ("the function
+  should return null wait no it should throw...") into an actual Java code
+  block. Added an equivalent "never convert to code" rule to
+  `build_tone_prompt` (now rule 3 of 5). After the fix: 4 of 180 calls still
+  leaked code syntax, all confined to samples #7 and #16 (the two samples
+  that literally describe programming concepts) under `tone-playful`,
+  `tone-dramatic`, and `tone-enthusiastic`. **Residual, disclosed risk**: the
+  tone-restyle pass has an elevated (bounded to code-describing dictation,
+  not general-purpose) chance of code conversion on code-adjacent content
+  when a non-neutral tone is selected. Neutral tone (the default, skips Pass
+  2 entirely) is unaffected. Revisit if this proves disruptive in practice —
+  a stronger mitigation would be skipping Pass 2 entirely when Pass 1's
+  output looks code-adjacent, rather than relying on Pass 2's own prompt
+  discipline.
+
+**Grammar-level differentiation — real, but inconsistent on this 1.5B
+model**: comparing Butler vs Oxford output across all 20 samples, only 4/20
+actually differed (the other 16 had nothing for Oxford's stricter rules to
+act on, or the model didn't apply them). Of the 4 that did differ, 3 were
+correct textbook behavior (dropping "you know"/"just to summarize" discourse
+openers, semicolon-joining clauses) and 1 was a genuine bug: Butler's "don't
+correct sentence structure" framing was shadowing rule 1 for one specific
+self-correction phrasing ("X actually no Y"), producing "Send the invoice by
+6pm, actually no 6pm..." instead of resolving it. Two rounds of stronger
+wording in Butler's rule 3 did not fix this specific adversarial phrasing
+(same output both times) — documented here as a known, narrow residual
+defect rather than iterated further, consistent with this project's existing
+practice of accepting bounded imperfections (see #7/#9 above) rather than
+chasing every edge case on a small model.
+
+**Tone/style is a real, working differentiator** on this model — e.g. sample
+#11 ("quarterly numbers") read as "Revenue is up twelve percent, and churn
+increased to four point two percent." under Direct vs. "Revenue soars,
+twelve percent up, but churn rises, four point two percent, a slight
+increase." under Dramatic — same facts, clearly different voice, exactly the
+intended effect. Latency: grammar-only passes stayed at the existing
+~250ms; adding a tone pass roughly doubled cleanup latency to ~500-600ms
+median (up to ~930ms), as anticipated in the design — only paid when tone is
+explicitly set to non-neutral.
+
 ### Robustness fixes from live testing (same session)
 
 - Continuity/iPhone mics ("Tobias Microphone") advertise stream configs that fail at build time once the phone sleeps or renegotiates — the recorder now tries every config of every candidate device (system default -> built-in -> rest) until one builds AND plays, instead of erroring on the first failure.

@@ -1,5 +1,6 @@
 import { useEffect, useState, useCallback } from "react";
 import { invoke } from "@tauri-apps/api/core";
+import { listen } from "@tauri-apps/api/event";
 
 interface Settings {
   models_root: string;
@@ -11,7 +12,41 @@ interface Settings {
   cleanup_model: string;
   llama_server_path: string;
   cleanup_port: number;
+  grammar_level: string;
+  tone: string;
+  personalization_enabled: boolean;
 }
+
+interface HistoryEntry {
+  id: number;
+  raw: string;
+  cleaned: string;
+  ts: number;
+}
+
+interface CorrectionRecord {
+  id: number;
+  ts: number;
+  raw: string;
+  cleaned: string;
+  corrected: string;
+}
+
+const GRAMMAR_LEVELS: { value: string; label: string; hint: string }[] = [
+  { value: "butler", label: "Butler", hint: "barely touches your words" },
+  { value: "casual", label: "Casual", hint: "light cleanup, keeps your voice" },
+  { value: "standard", label: "Standard", hint: "fixes grammar, keeps contractions" },
+  { value: "formal", label: "Formal", hint: "expands contractions, drops casual openers" },
+  { value: "oxford", label: "Oxford", hint: "maximally correct written English" },
+];
+
+const TONES: { value: string; label: string; hint: string }[] = [
+  { value: "neutral", label: "Neutral", hint: "no restyle, fastest" },
+  { value: "playful", label: "Playful", hint: "a little warmth and humor" },
+  { value: "enthusiastic", label: "Enthusiastic", hint: "upbeat energy" },
+  { value: "direct", label: "Direct", hint: "terse, strips hedging" },
+  { value: "dramatic", label: "Dramatic", hint: "maximum flair" },
+];
 
 // Map a browser KeyboardEvent to tauri-plugin-global-shortcut syntax
 // (e.g. "alt+space", "cmd+shift+d"). Returns null for a modifier-only press.
@@ -43,6 +78,11 @@ export default function SettingsPage() {
   const [devices, setDevices] = useState<string[]>([]);
   const [capturing, setCapturing] = useState(false);
   const [status, setStatus] = useState<{ kind: "ok" | "err"; msg: string } | null>(null);
+
+  const [history, setHistory] = useState<HistoryEntry[]>([]);
+  const [corrections, setCorrections] = useState<CorrectionRecord[]>([]);
+  const [fixingId, setFixingId] = useState<number | null>(null);
+  const [fixText, setFixText] = useState("");
 
   useEffect(() => {
     invoke<Settings>("get_settings").then(setSettings).catch(console.error);
@@ -78,6 +118,57 @@ export default function SettingsPage() {
       setStatus({ kind: "err", msg: String(e) });
     }
   }, [settings]);
+
+  const refreshHistory = useCallback(() => {
+    invoke<HistoryEntry[]>("get_recent_history").then(setHistory).catch(console.error);
+  }, []);
+
+  const refreshCorrections = useCallback(() => {
+    invoke<CorrectionRecord[]>("list_corrections").then(setCorrections).catch(console.error);
+  }, []);
+
+  // Personalization is opt-in: only fetch/subscribe once the user has
+  // turned it on, and nothing here writes anything to disk by itself.
+  useEffect(() => {
+    if (!settings?.personalization_enabled) return;
+    refreshHistory();
+    refreshCorrections();
+    const unlisten = listen("history-updated", () => refreshHistory());
+    return () => {
+      unlisten.then((fn) => fn());
+    };
+  }, [settings?.personalization_enabled, refreshHistory, refreshCorrections]);
+
+  const startFix = (h: HistoryEntry) => {
+    setFixingId(h.id);
+    setFixText(h.cleaned);
+  };
+
+  const cancelFix = () => {
+    setFixingId(null);
+    setFixText("");
+  };
+
+  const submitFix = async (id: number) => {
+    try {
+      await invoke("submit_correction", { historyId: id, correctedText: fixText });
+      setFixingId(null);
+      setFixText("");
+      refreshCorrections();
+    } catch (e) {
+      setStatus({ kind: "err", msg: String(e) });
+    }
+  };
+
+  const clearAllCorrections = async () => {
+    if (!window.confirm("Delete all saved corrections? This cannot be undone.")) return;
+    try {
+      await invoke("clear_corrections");
+      refreshCorrections();
+    } catch (e) {
+      setStatus({ kind: "err", msg: String(e) });
+    }
+  };
 
   if (!settings) return <main className="page"><p>Loading...</p></main>;
 
@@ -168,6 +259,105 @@ export default function SettingsPage() {
           />
           <span>Tidy up transcripts with the local model ({settings.cleanup_model.replace(/\.gguf$/, "")})</span>
         </label>
+      </section>
+
+      <section className="page__section">
+        <h2>Grammar strictness</h2>
+        <div className="segmented">
+          {GRAMMAR_LEVELS.map(({ value, label, hint }) => (
+            <button
+              key={value}
+              className={settings.grammar_level === value ? "seg seg--on" : "seg"}
+              onClick={() => patch({ grammar_level: value })}
+            >
+              {label}
+              <small>{hint}</small>
+            </button>
+          ))}
+        </div>
+      </section>
+
+      <section className="page__section">
+        <h2>Tone</h2>
+        <div className="segmented">
+          {TONES.map(({ value, label, hint }) => (
+            <button
+              key={value}
+              className={settings.tone === value ? "seg seg--on" : "seg"}
+              onClick={() => patch({ tone: value })}
+            >
+              {label}
+              <small>{hint}</small>
+            </button>
+          ))}
+        </div>
+      </section>
+
+      <section className="page__section">
+        <h2>History &amp; personalization</h2>
+        <label className="toggle">
+          <input
+            type="checkbox"
+            checked={settings.personalization_enabled}
+            onChange={(e) => patch({ personalization_enabled: e.target.checked })}
+          />
+          <span>
+            Remember recent dictations so you can fix mistakes, and let suzune learn
+            your corrections over time. Off by default — nothing is stored unless you
+            actually correct something, it never leaves your machine, and you can
+            clear it anytime below.
+          </span>
+        </label>
+
+        {settings.personalization_enabled && (
+          <div className="history">
+            <h3 className="page__subhead">Recent dictations</h3>
+            {history.length === 0 ? (
+              <p className="history-empty">Nothing yet — dictate something and it will show up here.</p>
+            ) : (
+              <div className="history-list">
+                {history.slice().reverse().map((h) => (
+                  <div className="history-item" key={h.id}>
+                    <div className="history-item__text">{h.cleaned}</div>
+                    {fixingId === h.id ? (
+                      <div className="history-item__fix">
+                        <textarea
+                          value={fixText}
+                          onChange={(e) => setFixText(e.target.value)}
+                          rows={2}
+                        />
+                        <div className="history-item__actions">
+                          <button className="link-btn" onClick={() => submitFix(h.id)}>Save correction</button>
+                          <button className="link-btn" onClick={cancelFix}>Cancel</button>
+                        </div>
+                      </div>
+                    ) : (
+                      <div className="history-item__actions">
+                        <button className="link-btn" onClick={() => startFix(h)}>Fix this</button>
+                      </div>
+                    )}
+                  </div>
+                ))}
+              </div>
+            )}
+
+            <h3 className="page__subhead">Your corrections ({corrections.length})</h3>
+            {corrections.length === 0 ? (
+              <p className="history-empty">No corrections saved yet.</p>
+            ) : (
+              <div className="corrections-list">
+                {corrections.slice().reverse().map((c) => (
+                  <div className="corrections-list__item" key={c.id}>
+                    "{c.cleaned}" → "{c.corrected}"
+                  </div>
+                ))}
+              </div>
+            )}
+            {corrections.length > 0 && (
+              <button className="danger" onClick={clearAllCorrections}>Clear all corrections</button>
+            )}
+          </div>
+        )}
       </section>
 
       <footer className="page__actions">

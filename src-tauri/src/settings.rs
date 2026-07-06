@@ -30,6 +30,21 @@ pub struct Settings {
     pub llama_server_path: PathBuf,
     /// Port the embedded llama-server listens on (localhost only).
     pub cleanup_port: u16,
+    /// Grammar-strictness level for the cleanup pass: "butler", "casual",
+    /// "standard", "formal", or "oxford". Unknown/empty values fall back
+    /// to "standard" (see `suzune_cleanup::GrammarLevel::from_setting`).
+    pub grammar_level: String,
+    /// Optional tone/style restyle applied after grammar cleanup: "neutral"
+    /// (skips the pass entirely), "playful", "enthusiastic", "direct", or
+    /// "dramatic". Unknown/empty values fall back to "neutral".
+    pub tone: String,
+    /// Opt-in, off by default: when true, the app keeps a rolling in-memory
+    /// history of recent dictations so the user can flag corrections from
+    /// the Settings window. Only entries the user actively corrects are
+    /// ever persisted (to `<app-config-dir>/corrections.jsonl`) — nothing
+    /// is written to disk just from enabling this. See
+    /// `suzune::personalization` and `docs/legal-review.md`.
+    pub personalization_enabled: bool,
 }
 
 impl Default for Settings {
@@ -44,6 +59,9 @@ impl Default for Settings {
             cleanup_model: "Qwen2.5-1.5B-Instruct-Q4_K_M.gguf".to_string(),
             llama_server_path: PathBuf::from("/opt/homebrew/bin/llama-server"),
             cleanup_port: 8542,
+            grammar_level: "standard".to_string(),
+            tone: "neutral".to_string(),
+            personalization_enabled: false,
         }
     }
 }

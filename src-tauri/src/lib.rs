@@ -1,10 +1,12 @@
 mod coordinator;
 mod models;
+mod personalization;
 mod settings;
 
 use coordinator::{Command, Coordinator};
 use settings::Settings;
-use std::sync::atomic::{AtomicBool, Ordering};
+use std::collections::VecDeque;
+use std::sync::atomic::{AtomicBool, AtomicU64, Ordering};
 use std::sync::{Arc, Mutex};
 use tauri::menu::{Menu, MenuItem};
 use tauri::tray::TrayIconBuilder;
@@ -20,6 +22,29 @@ struct SettingsState {
     /// Continuous-mode recording flag, shared across shortcut
     /// re-registrations so a mode change mid-session can't strand it.
     toggle_recording: Arc<AtomicBool>,
+}
+
+/// One recent dictation result, kept only in memory unless the user
+/// actively corrects it (see `submit_correction`). Cleared on app restart.
+#[derive(Clone, serde::Serialize)]
+pub struct HistoryEntry {
+    pub id: u64,
+    pub raw: String,
+    pub cleaned: String,
+    pub ts: u64,
+}
+
+/// Shared handle for the personalization feature: the rolling in-memory
+/// history buffer (Tauri-managed for the Settings window's commands, and
+/// cloned into the coordinator's `Worker` so it can push new entries), plus
+/// the config directory the corrections/vocabulary files live under.
+/// Cloning is cheap (two `Arc`s and a `PathBuf`) — the same handle is
+/// shared, not duplicated data.
+#[derive(Clone)]
+pub struct HistoryState {
+    pub buffer: Arc<Mutex<VecDeque<HistoryEntry>>>,
+    pub next_id: Arc<AtomicU64>,
+    pub config_dir: std::path::PathBuf,
 }
 
 #[tauri::command]
@@ -62,6 +87,66 @@ fn list_input_devices() -> Vec<String> {
     suzune_audio::input_device_names()
 }
 
+/// The rolling recent-dictation history (empty unless personalization is
+/// enabled — see `HistoryState`'s doc comment). Never touches disk.
+#[tauri::command]
+fn get_recent_history(state: tauri::State<HistoryState>) -> Vec<HistoryEntry> {
+    state.buffer.lock().unwrap().iter().cloned().collect()
+}
+
+/// The user has flagged a history entry as wrong and typed the correct
+/// version. Persists the (raw, cleaned, corrected) triple to
+/// `corrections.jsonl` and asks the running coordinator to pick it up.
+#[tauri::command]
+fn submit_correction(
+    state: tauri::State<HistoryState>,
+    app: AppHandle,
+    history_id: u64,
+    corrected_text: String,
+) -> Result<(), String> {
+    let entry = {
+        let buf = state.buffer.lock().unwrap();
+        buf.iter().find(|e| e.id == history_id).cloned()
+    }
+    .ok_or_else(|| {
+        "that history entry is no longer available (it may have scrolled past the 50-entry limit)"
+            .to_string()
+    })?;
+
+    let record = personalization::CorrectionRecord {
+        id: entry.id,
+        ts: personalization::now_unix(),
+        raw: entry.raw,
+        cleaned: entry.cleaned,
+        corrected: corrected_text,
+    };
+    personalization::append_correction(&state.config_dir, &record)
+        .map_err(|e| format!("could not save correction: {e}"))?;
+
+    if app.try_state::<Coordinator>().is_some() {
+        app.state::<Coordinator>().send(Command::ReloadCorrections);
+    }
+    Ok(())
+}
+
+/// Every correction the user has ever submitted — the user-inspectable
+/// view of `corrections.jsonl`.
+#[tauri::command]
+fn list_corrections(state: tauri::State<HistoryState>) -> Vec<personalization::CorrectionRecord> {
+    personalization::load_corrections(&state.config_dir)
+}
+
+/// Delete the corrections store and derived vocabulary entirely.
+#[tauri::command]
+fn clear_corrections(state: tauri::State<HistoryState>, app: AppHandle) -> Result<(), String> {
+    personalization::clear_corrections(&state.config_dir)
+        .map_err(|e| format!("could not clear corrections: {e}"))?;
+    if app.try_state::<Coordinator>().is_some() {
+        app.state::<Coordinator>().send(Command::ReloadCorrections);
+    }
+    Ok(())
+}
+
 #[tauri::command]
 fn cancel_dictation(state: tauri::State<SettingsState>, app: AppHandle) {
     // The coordinator may not exist yet during first-run download.
@@ -86,7 +171,8 @@ fn needs_setup(state: tauri::State<SettingsState>, app: AppHandle) -> bool {
 /// the models are present — immediately at launch, or after the first-run
 /// download completes.
 fn finish_startup(app: &AppHandle, settings: &Settings) -> tauri::Result<()> {
-    let coordinator = Coordinator::start(app.clone(), settings.clone());
+    let history = app.state::<HistoryState>().inner().clone();
+    let coordinator = Coordinator::start(app.clone(), settings.clone(), history);
     app.manage(coordinator);
     register_shortcut(app, &settings.shortcut)?;
     log::info!("dictation engine started");
@@ -235,6 +321,15 @@ pub fn run() {
                 toggle_recording: Arc::new(AtomicBool::new(false)),
             });
 
+            // Personalization's shared handle — managed here (not lazily on
+            // first use) so it exists before `finish_startup` reaches for it
+            // on both the synchronous and first-run-download startup paths.
+            app.manage(HistoryState {
+                buffer: Arc::new(Mutex::new(VecDeque::new())),
+                next_id: Arc::new(AtomicU64::new(1)),
+                config_dir: config_dir.clone(),
+            });
+
             // Start the dictation engine now if the models are present;
             // otherwise download them first (first-run) and start after.
             if models::models_present(&settings.models_root, &settings.cleanup_model) {
@@ -330,7 +425,11 @@ pub fn run() {
             save_settings,
             list_input_devices,
             cancel_dictation,
-            needs_setup
+            needs_setup,
+            get_recent_history,
+            submit_correction,
+            list_corrections,
+            clear_corrections
         ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");

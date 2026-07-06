@@ -274,6 +274,85 @@ select {
   .status--ok { color: #9ac07f; }
 }
 
+/* ---------- history / personalization ---------- */
+
+.page__subhead {
+  margin-top: 1.4rem;
+  margin-bottom: 0.6rem;
+  font-family: var(--mono);
+  font-size: 0.74rem;
+  text-transform: uppercase;
+  letter-spacing: 0.12em;
+  color: var(--ink-soft);
+}
+
+.history-empty { font-size: 0.88rem; color: var(--ink-soft); font-style: italic; }
+
+.history-list { display: flex; flex-direction: column; gap: 0.6rem; max-width: 40rem; }
+
+.history-item {
+  padding: 0.7rem 0.9rem;
+  background: var(--paper-deep);
+  border: 1px solid var(--rule);
+  border-radius: 6px;
+}
+
+.history-item__text { font-size: 0.95rem; line-height: 1.5; }
+
+.history-item__actions { margin-top: 0.5rem; display: flex; gap: 1rem; align-items: center; }
+
+.history-item__fix { margin-top: 0.6rem; display: flex; flex-direction: column; gap: 0.5rem; }
+
+.history-item__fix textarea {
+  font-family: var(--serif);
+  font-size: 0.95rem;
+  padding: 0.6rem 0.7rem;
+  background: var(--paper);
+  color: var(--ink);
+  border: 1px solid var(--rule);
+  border-radius: 6px;
+  resize: vertical;
+  min-height: 3.4rem;
+}
+
+.link-btn {
+  font-family: var(--mono);
+  font-size: 0.76rem;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--accent);
+  background: none;
+  border: none;
+  padding: 0;
+  cursor: pointer;
+}
+.link-btn:hover { text-decoration: underline; }
+
+.corrections-list { display: flex; flex-direction: column; gap: 0.2rem; max-width: 40rem; margin-top: 0.6rem; }
+
+.corrections-list__item {
+  font-size: 0.88rem;
+  color: var(--ink-soft);
+  padding: 0.4rem 0;
+  border-bottom: 1px solid var(--rule);
+}
+.corrections-list__item:last-child { border-bottom: none; }
+
+.danger {
+  margin-top: 1rem;
+  font-family: var(--mono);
+  font-size: 0.78rem;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  padding: 0.5rem 1rem;
+  background: var(--paper-deep);
+  color: var(--accent);
+  border: 1px solid var(--accent);
+  border-radius: 6px;
+  cursor: pointer;
+}
+.danger:active { transform: translateY(1px); }
+
 /* ---------- first-run setup ---------- */
 
 .setup__lede { line-height: 1.6; max-width: 46ch; margin-bottom: 1.6rem; }

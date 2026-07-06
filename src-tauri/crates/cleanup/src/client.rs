@@ -3,8 +3,14 @@
 //! Talks to any OpenAI-compatible `/v1/chat/completions` endpoint on
 //! localhost — the bundled `llama-server`, or a power user's own Ollama /
 //! LM Studio instance — via a configurable base URL.
+//!
+//! Runs up to two sequential passes against the same server: Pass 1
+//! (always) applies the grammar-strictness cleanup; Pass 2 (only when a
+//! non-neutral tone is configured) restyles Pass 1's output. See
+//! `prompt.rs`'s module doc for why these are two separate calls rather
+//! than one combined prompt.
 
-use crate::prompt::SYSTEM_PROMPT_V3;
+use crate::prompt::{build_grammar_prompt, build_tone_prompt, GrammarLevel, Tone};
 use anyhow::{anyhow, Context, Result};
 use serde::{Deserialize, Serialize};
 use std::time::Duration;
@@ -14,17 +20,33 @@ const MAX_TOKENS: u32 = 400;
 const THINK_OPEN: &str = "<think>";
 const THINK_CLOSE: &str = "</think>";
 
+/// A personalized correction example, injected into Pass 1's prompt ahead
+/// of the user's real transcript. Sourced from the user's own stored
+/// corrections (see `suzune::personalization`).
+pub struct FewShotExample<'a> {
+    pub input: &'a str,
+    pub output: &'a str,
+}
+
 pub struct CleanupClient {
     base_url: String,
+    grammar_prompt: String,
+    tone_prompt: Option<String>,
 }
 
 impl CleanupClient {
     /// `base_url` is the server root, e.g. `http://127.0.0.1:8544`
-    /// (no trailing `/v1/...` suffix).
-    pub fn new(base_url: impl Into<String>) -> Self {
+    /// (no trailing `/v1/...` suffix). `level`/`tone` are resolved once at
+    /// construction into their system prompts — reload settings by
+    /// constructing a new client, not by mutating an existing one.
+    pub fn new(base_url: impl Into<String>, level: GrammarLevel, tone: Tone) -> Self {
         let base_url = base_url.into();
         let base_url = base_url.trim_end_matches('/').to_string();
-        CleanupClient { base_url }
+        CleanupClient {
+            base_url,
+            grammar_prompt: build_grammar_prompt(level),
+            tone_prompt: build_tone_prompt(tone),
+        }
     }
 
     /// True if a llama-server (or compatible) is already healthy at
@@ -38,18 +60,53 @@ impl CleanupClient {
             .unwrap_or(false)
     }
 
-    /// Send `raw_transcript` through the cleanup system prompt and return the
-    /// cleaned, trimmed text.
-    pub fn clean(&self, raw_transcript: &str) -> Result<String> {
+    /// Send `raw_transcript` through the grammar cleanup pass (with any
+    /// personalized `few_shot` examples appended ahead of the transcript),
+    /// then through the tone-restyle pass if one is configured. Returns the
+    /// final cleaned/restyled, trimmed text.
+    ///
+    /// A Pass-2 failure is not fatal: cleanup is an enhancement, so a
+    /// restyle error falls back to Pass 1's already-clean output rather
+    /// than failing the whole call (matching the fallback philosophy
+    /// already used one level up in `coordinator.rs`).
+    pub fn clean(&self, raw_transcript: &str, few_shot: &[FewShotExample]) -> Result<String> {
+        let cleaned = self.run_pass(&self.pass1_system(few_shot), raw_transcript)?;
+        match &self.tone_prompt {
+            None => Ok(cleaned),
+            Some(tone_system) => match self.run_pass(tone_system, &cleaned) {
+                Ok(restyled) if !restyled.is_empty() => Ok(restyled),
+                Ok(_) => Ok(cleaned),
+                Err(e) => {
+                    log::warn!("tone restyle failed, using grammar-cleaned text: {}", e);
+                    Ok(cleaned)
+                }
+            },
+        }
+    }
+
+    /// Pass 1's system prompt: the grammar-level prompt with any
+    /// personalized examples appended to its existing "Examples:" block.
+    fn pass1_system(&self, few_shot: &[FewShotExample]) -> String {
+        if few_shot.is_empty() {
+            return self.grammar_prompt.clone();
+        }
+        let mut system = self.grammar_prompt.clone();
+        for ex in few_shot {
+            system.push_str(&format!("\nInput: {}\nOutput: {}", ex.input, ex.output));
+        }
+        system
+    }
+
+    fn run_pass(&self, system: &str, user: &str) -> Result<String> {
         let request = ChatRequest {
             messages: vec![
                 ChatMessage {
                     role: "system",
-                    content: SYSTEM_PROMPT_V3,
+                    content: system,
                 },
                 ChatMessage {
                     role: "user",
-                    content: raw_transcript,
+                    content: user,
                 },
             ],
             temperature: 0.0,
@@ -126,6 +183,7 @@ fn strip_think(s: &str) -> &str {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use crate::prompt::{GrammarLevel, Tone};
 
     #[test]
     fn parses_plain_response() {
@@ -166,5 +224,36 @@ mod tests {
     fn malformed_json_errors_clearly() {
         let body = "not json";
         assert!(parse_response(body).is_err());
+    }
+
+    #[test]
+    fn pass1_system_with_no_few_shot_is_bare_grammar_prompt() {
+        let client = CleanupClient::new("http://127.0.0.1:1", GrammarLevel::Standard, Tone::Neutral);
+        assert_eq!(client.pass1_system(&[]), client.grammar_prompt);
+    }
+
+    #[test]
+    fn pass1_system_appends_few_shot_examples() {
+        let client = CleanupClient::new("http://127.0.0.1:1", GrammarLevel::Standard, Tone::Neutral);
+        let examples = [FewShotExample {
+            input: "call fransisco",
+            output: "Call Francisco.",
+        }];
+        let system = client.pass1_system(&examples);
+        assert!(system.starts_with(&client.grammar_prompt));
+        assert!(system.contains("Input: call fransisco"));
+        assert!(system.contains("Output: Call Francisco."));
+    }
+
+    #[test]
+    fn neutral_tone_has_no_tone_prompt() {
+        let client = CleanupClient::new("http://127.0.0.1:1", GrammarLevel::Standard, Tone::Neutral);
+        assert!(client.tone_prompt.is_none());
+    }
+
+    #[test]
+    fn non_neutral_tone_has_a_tone_prompt() {
+        let client = CleanupClient::new("http://127.0.0.1:1", GrammarLevel::Standard, Tone::Playful);
+        assert!(client.tone_prompt.is_some());
     }
 }

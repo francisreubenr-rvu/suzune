@@ -14,18 +14,33 @@ Cloud dictation tools stream your voice — and in some cases periodic screensho
 global hotkey (hold to talk / toggle)
   -> cpal mic capture -> rubato resample to 16kHz mono
   -> Parakeet TDT 0.6B v2 (int8 ONNX, on-device) speech recognition
-  -> Qwen2.5-1.5B-Instruct (Q4 GGUF via llama.cpp, on-device) cleanup pass
-     fillers, stutters, self-corrections, punctuation - prompt-versioned
+  -> [optional] personal vocabulary substitution (opt-in, local corrections only)
+  -> Qwen2.5-1.5B-Instruct (Q4 GGUF via llama.cpp, on-device) grammar cleanup pass
+     fillers, stutters, self-corrections, punctuation - strictness is user-selectable
+     (Butler -> Casual -> Standard -> Formal -> Oxford)
+  -> [optional] tone-restyle pass, same model, only when tone != neutral
+     (Playful / Enthusiastic / Direct / Dramatic)
   -> injection into the focused app (Accessibility insert, clipboard-paste fallback)
 ```
 
-Measured on a MacBook M1 Pro (16GB): a 10-second utterance transcribes in ~400ms (RTF 0.035, CPU only) and the cleanup pass adds a ~260ms median — end-to-end from key-release to injected text in roughly one second. Idle footprint is dominated by the resident models (~2.3GB RSS total including the cleanup server).
+Measured on a MacBook M1 Pro (16GB): a 10-second utterance transcribes in ~400ms (RTF 0.035, CPU only) and the grammar cleanup pass adds a ~260ms median — end-to-end from key-release to injected text in roughly one second at the default (neutral tone). Selecting a non-neutral tone adds a second pass through the same model, ~250-300ms more. Idle footprint is dominated by the resident models (~2.3GB RSS total including the cleanup server).
+
+## Learning from corrections (opt-in)
+
+Turn on **History & personalization** in Settings and suzune remembers your
+recent dictations so you can flag ones it got wrong and type what you
+actually meant. Only entries you correct are ever saved — the corrections
+feed two things: a few of your most relevant past corrections get added to
+the cleanup prompt as extra examples, and a small personal vocabulary (names
+and phrases the ASR consistently mishears) gets applied before the cleanup
+pass even runs. Off by default; everything lives in local, plain-text files
+you can inspect or delete from Settings at any time. See `docs/legal-review.md`.
 
 ## Status
 
 Early but functional. Built and tested on macOS; the codebase is written to build on Windows and Linux too (the whisper.cpp GPU backend is selected per-target — Metal on macOS, Vulkan/DirectML on Windows, Vulkan on Linux — and text injection uses the platform paste keystroke). Those builds are feasible but unverified for now.
 
-On first launch suzune fetches its on-device models automatically (a progress screen shows the download once, then never again) into the app data directory — nothing to install by hand. Settings are editable in-app from the tray: hotkey, push-to-talk vs continuous mode, text-placement method, microphone, and the cleanup pass.
+On first launch suzune fetches its on-device models automatically (a progress screen shows the download once, then never again) into the app data directory — nothing to install by hand. Settings are editable in-app from the tray: hotkey, push-to-talk vs continuous mode, text-placement method, microphone, grammar strictness, tone, and history/personalization.
 
 | Setting | Default | Meaning |
 |---|---|---|
@@ -34,6 +49,9 @@ On first launch suzune fetches its on-device models automatically (a progress sc
 | `injection_method` | `clipboard` | `clipboard` (reliable everywhere incl. terminals/Electron), `ax` (write-only, no clipboard, some apps unsupported), or `type` |
 | `cleanup_enabled` | `true` | Local LLM cleanup pass on/off |
 | `cleanup_model` | `Qwen2.5-1.5B-Instruct-Q4_K_M.gguf` | GGUF under `models_root` |
+| `grammar_level` | `standard` | Cleanup strictness: `butler`, `casual`, `standard`, `formal`, or `oxford` — see `docs/spike-results.md`'s mode bake-off for what each level actually does on this model |
+| `tone` | `neutral` | Optional restyle pass after cleanup: `neutral` (skipped, no added latency), `playful`, `enthusiastic`, `direct`, or `dramatic` |
+| `personalization_enabled` | `false` | Opt-in. When on, keeps a rolling in-memory list of recent dictations so you can fix mistakes from Settings; only entries you actively correct are ever written to disk (`corrections.jsonl` / `vocabulary.json` in the app config dir), and both are local-only, never transmitted, and clearable from Settings at any time |
 | `input_device` | `null` | Pin an exact input-device name (defeats macOS Continuity grabbing the default mic for a nearby iPhone) |
 | `models_root` | app data dir | Folder holding the model files; the first-run download populates it |
 

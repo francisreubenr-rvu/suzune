@@ -4262,6 +4262,7 @@ dependencies = [
  "hound",
  "suzune-asr",
  "suzune-audio",
+ "suzune-cleanup",
  "suzune-vad",
 ]
 
