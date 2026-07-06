@@ -232,11 +232,21 @@ impl Worker {
         let mut raw = transcript.text.trim().to_string();
         if raw.is_empty() {
             // Silence in, nothing out — tell the user instead of vanishing.
-            // A near-zero peak means the mic heard nothing (wrong device,
-            // muted, or a Continuity mic in another room).
+            // A near-zero peak means the mic heard nothing: wrong device,
+            // muted, a Continuity mic in another room, OR macOS silently
+            // denying microphone access. That last case is easy to miss —
+            // unlike Windows, macOS/CoreAudio does not surface a "permission
+            // denied" error here; the stream just delivers silence, so a
+            // stale/mismatched Microphone TCC grant (e.g. after re-signing
+            // the app with a new identity) looks identical to a hardware
+            // problem without this hint.
             anyhow::bail!(
                 "didn't catch any speech{}",
-                if peak < 0.005 { " — check your microphone" } else { "" }
+                if peak < 0.005 {
+                    " — check your microphone, or macOS Privacy & Security > Microphone permission for this app"
+                } else {
+                    ""
+                }
             );
         }
 
