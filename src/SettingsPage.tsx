@@ -77,6 +77,7 @@ export default function SettingsPage() {
   const [settings, setSettings] = useState<Settings | null>(null);
   const [devices, setDevices] = useState<string[]>([]);
   const [capturing, setCapturing] = useState(false);
+  const [captureStuck, setCaptureStuck] = useState(false);
   const [status, setStatus] = useState<{ kind: "ok" | "err"; msg: string } | null>(null);
 
   const [history, setHistory] = useState<HistoryEntry[]>([]);
@@ -94,10 +95,24 @@ export default function SettingsPage() {
     setStatus(null);
   };
 
-  // Capture the next key combination for the hotkey field.
+  // Capture the next key combination for the hotkey field. Escape cancels
+  // without changing anything — and since some combinations never reach the
+  // webview at all (many Cmd+Shift+<letter> combos are already claimed by
+  // macOS itself, or by another app's own global shortcut, before the
+  // keystroke is ever delivered here), a stuck "Listening..." with no way
+  // out used to be the only outcome. A timeout now surfaces that possibility
+  // instead of leaving the user stuck.
   useEffect(() => {
-    if (!capturing) return;
+    if (!capturing) {
+      setCaptureStuck(false);
+      return;
+    }
     const onKey = (e: KeyboardEvent) => {
+      if (e.key === "Escape") {
+        e.preventDefault();
+        setCapturing(false);
+        return;
+      }
       e.preventDefault();
       const sc = shortcutFromEvent(e);
       if (sc) {
@@ -106,7 +121,11 @@ export default function SettingsPage() {
       }
     };
     window.addEventListener("keydown", onKey, true);
-    return () => window.removeEventListener("keydown", onKey, true);
+    const stuckTimer = window.setTimeout(() => setCaptureStuck(true), 4000);
+    return () => {
+      window.removeEventListener("keydown", onKey, true);
+      window.clearTimeout(stuckTimer);
+    };
   }, [capturing]);
 
   const save = useCallback(async () => {
@@ -189,8 +208,17 @@ export default function SettingsPage() {
             {capturing ? "Press a key combination..." : prettyShortcut(settings.shortcut)}
           </button>
           <span className="field__hint">
-            {capturing ? "Listening — press your keys" : "Click to change"}
+            {capturing
+              ? "Listening — press your keys, or Esc to cancel"
+              : "Click to change"}
           </span>
+          {capturing && captureStuck && (
+            <span className="field__hint field__hint--warn">
+              Still nothing? Some key combinations are already claimed by
+              macOS itself or another app, so this app never sees them —
+              try a different combination, or press Esc to cancel.
+            </span>
+          )}
         </div>
       </section>
 
