@@ -17,6 +17,22 @@ use suzune_asr::{Engine, EngineKind};
 use suzune_audio::Recorder;
 use suzune_cleanup::{CleanupClient, FewShotExample, GrammarLevel, LlamaServer, LlamaServerConfig, Tone};
 
+/// Cap on how much leading exact-zero (USB device warm-up) audio may be
+/// trimmed from an utterance — see `suzune_audio::leading_zero_prefix`.
+const WARMUP_TRIM_MAX_MS: usize = 500;
+
+/// Peak absolute sample per 250ms window, formatted as "[0.000 0.512 …]".
+/// One figure per window makes a warm-up dead zone visually obvious in the
+/// log next to real speech peaks.
+fn format_window_peaks(samples: &[f32]) -> String {
+    let window = suzune_audio::SAMPLE_RATE as usize / 4;
+    let peaks: Vec<String> = samples
+        .chunks(window)
+        .map(|w| format!("{:.3}", w.iter().fold(0.0f32, |m, s| m.max(s.abs()))))
+        .collect();
+    format!("[{}]", peaks.join(" "))
+}
+
 #[derive(Debug)]
 pub enum Command {
     StartRecording,
@@ -212,16 +228,39 @@ impl Worker {
     /// is transcribed — no VAD endpointing here (M1 finding: endpointing is
     /// for a future hands-free mode).
     fn process(&mut self, mut recorder: Recorder) -> Result<Option<(String, String)>> {
-        let audio = recorder.stop()?;
+        let captured = recorder.stop()?;
+        // Warm-up guard: the stream is opened fresh on every press, and USB
+        // mics (observed on a Shure MV7) can deliver all-zero callback
+        // buffers for tens-to-hundreds of ms after `play()` while the
+        // driver's ring buffer stabilizes. Trim that exact-zero prefix so
+        // it neither eats into the too-short floor below nor pads a dead
+        // capture past it. See `suzune_audio::leading_zero_prefix` for why
+        // this can never drop real speech or a real noise floor.
+        let max_drop = suzune_audio::SAMPLE_RATE as usize * WARMUP_TRIM_MAX_MS / 1000;
+        let zero_prefix = suzune_audio::leading_zero_prefix(&captured, max_drop);
+        let zero_prefix_ms = zero_prefix * 1000 / suzune_audio::SAMPLE_RATE as usize;
+        if zero_prefix > 0 {
+            log::info!("trimmed {zero_prefix_ms}ms of leading exact-zero audio (device warm-up)");
+        }
+        let audio = &captured[zero_prefix..];
         if audio.len() < suzune_audio::FRAME_SAMPLES * 10 {
-            return Ok(None); // <300ms: accidental tap
+            return Ok(None); // <300ms after the warm-up trim: accidental tap
         }
         let peak = audio.iter().fold(0.0f32, |m, s| m.max(s.abs()));
+        // Per-window peak timeline: makes a dead or late-waking mic
+        // self-explaining from the log of any utterance, not just failures.
+        log::info!(
+            "utterance: {:.2}s, peak {:.3}, zero prefix {}ms, 250ms window peaks {}",
+            audio.len() as f32 / suzune_audio::SAMPLE_RATE as f32,
+            peak,
+            zero_prefix_ms,
+            format_window_peaks(audio),
+        );
         let engine = self
             .engine
             .as_mut()
             .ok_or_else(|| anyhow::anyhow!("ASR engine not loaded"))?;
-        let transcript = match engine.transcribe(&audio, None) {
+        let transcript = match engine.transcribe(audio, None) {
             Ok(t) => t,
             Err(e) => {
                 // catch_unwind contract: a panicking engine must be dropped.
@@ -242,9 +281,10 @@ impl Worker {
             // problem without this hint.
             let device = recorder.device_name().unwrap_or("unknown device");
             anyhow::bail!(
-                "didn't catch any speech (mic: {}, peak {:.3}){}",
+                "didn't catch any speech (mic: {}, peak {:.3}, leading zeros {}ms){}",
                 device,
                 peak,
+                zero_prefix_ms,
                 if peak < 0.005 {
                     " — check your microphone, or macOS Privacy & Security > Microphone permission for this app"
                 } else {
@@ -399,5 +439,24 @@ impl Worker {
         }
         log::info!("settings reloaded (injection={}, ptt={})",
             self.settings.injection_method, self.settings.push_to_talk);
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::format_window_peaks;
+
+    #[test]
+    fn window_peaks_show_dead_then_live_windows() {
+        let quarter = suzune_audio::SAMPLE_RATE as usize / 4;
+        let mut samples = vec![0.0f32; quarter]; // one dead 250ms window
+        samples.extend(vec![0.5f32; quarter]); // one live window
+        samples.push(0.9); // partial trailing window still reported
+        assert_eq!(format_window_peaks(&samples), "[0.000 0.500 0.900]");
+    }
+
+    #[test]
+    fn window_peaks_empty_input() {
+        assert_eq!(format_window_peaks(&[]), "[]");
     }
 }

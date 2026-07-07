@@ -297,9 +297,69 @@ fn create_overlay(app: &tauri::AppHandle) -> tauri::Result<()> {
     Ok(())
 }
 
+/// Initialize logging. Dev runs (a TTY on stderr — `cargo run`,
+/// `bun run tauri dev`) keep logging to stderr as before. Finder-launched
+/// bundles have no TTY and macOS discards their stderr, so those log to
+/// `~/Library/Logs/dev.suzune.desktop/suzune.log` instead, rotating the
+/// previous run's file to `suzune.log.old` (bounded disk use, one prior run
+/// kept for post-mortem). If the log file can't be created, fall back to
+/// stderr rather than failing startup. `RUST_LOG` overrides levels either
+/// way; unset, the suzune crates log at info and everything else at warn.
+fn init_logging() {
+    use std::io::IsTerminal;
+
+    let mut builder = env_logger::Builder::new();
+    if std::env::var_os("RUST_LOG").is_some() {
+        builder.parse_default_env();
+    } else {
+        builder.filter_level(log::LevelFilter::Warn);
+        for target in [
+            "suzune_lib",
+            "suzune_audio",
+            "suzune_asr",
+            "suzune_cleanup",
+            "suzune_inject",
+            "suzune_vad",
+        ] {
+            builder.filter_module(target, log::LevelFilter::Info);
+        }
+    }
+    // Millisecond timestamps: warm-up windows are diagnosed in 10s of ms.
+    builder.format_timestamp_millis();
+
+    if !std::io::stderr().is_terminal() {
+        match open_log_file() {
+            Ok(file) => {
+                builder.target(env_logger::Target::Pipe(Box::new(file)));
+            }
+            Err(e) => eprintln!("suzune: could not open log file, using stderr: {e}"),
+        }
+    }
+    builder.init();
+    log::info!(
+        "suzune {} starting (pid {})",
+        env!("CARGO_PKG_VERSION"),
+        std::process::id()
+    );
+}
+
+/// Open `~/Library/Logs/dev.suzune.desktop/suzune.log` fresh, first rotating
+/// any existing file to `suzune.log.old` (overwriting the one before it).
+fn open_log_file() -> std::io::Result<std::fs::File> {
+    let home = std::env::var_os("HOME")
+        .ok_or_else(|| std::io::Error::new(std::io::ErrorKind::NotFound, "HOME not set"))?;
+    let dir = std::path::PathBuf::from(home).join("Library/Logs/dev.suzune.desktop");
+    std::fs::create_dir_all(&dir)?;
+    let path = dir.join("suzune.log");
+    if path.exists() {
+        let _ = std::fs::rename(&path, dir.join("suzune.log.old"));
+    }
+    std::fs::File::create(&path)
+}
+
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
 pub fn run() {
-    env_logger::init();
+    init_logging();
     tauri::Builder::default()
         .plugin(tauri_plugin_opener::init())
         .plugin(tauri_plugin_global_shortcut::Builder::new().build())

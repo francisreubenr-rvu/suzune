@@ -232,6 +232,23 @@ pub fn input_device_names() -> Vec<String> {
     }
 }
 
+/// Length of the prefix of `samples` that is exactly `0.0`, capped at
+/// `max_drop`. Callers trim this prefix off an utterance before length
+/// checks and ASR: USB input devices (observed on a Shure MV7) can deliver
+/// all-zero callback buffers for tens-to-hundreds of milliseconds after
+/// `stream.play()` while the driver's ring buffer stabilizes, and exact
+/// zeros contain no speech by definition, so trimming them can never lose
+/// words. A real room noise floor is near-zero but not exactly `0.0` and is
+/// never counted. Counting stops permanently at the first non-zero sample —
+/// zeros later in the buffer are legitimate silence and are kept.
+pub fn leading_zero_prefix(samples: &[f32], max_drop: usize) -> usize {
+    samples
+        .iter()
+        .take(max_drop)
+        .take_while(|&&s| s == 0.0)
+        .count()
+}
+
 fn classify_device_error(msg: &str) -> anyhow::Error {
     let normalized = msg.to_lowercase();
     if normalized.contains("access is denied")
@@ -562,5 +579,42 @@ mod tests {
         let mut r = Recorder::new();
         let err = r.stop().unwrap_err();
         assert!(err.to_string().contains("never started"));
+    }
+
+    #[test]
+    fn leading_zero_prefix_all_zero_input() {
+        // Shorter than the cap and entirely zero: the whole buffer counts.
+        let samples = vec![0.0f32; 100];
+        assert_eq!(leading_zero_prefix(&samples, 8000), 100);
+    }
+
+    #[test]
+    fn leading_zero_prefix_zeros_then_speech() {
+        let mut samples = vec![0.0f32; 50];
+        samples.extend([0.2, 0.4, -0.1]);
+        assert_eq!(leading_zero_prefix(&samples, 8000), 50);
+    }
+
+    #[test]
+    fn leading_zero_prefix_speech_immediately() {
+        // A quiet-but-real noise floor is not exactly zero: nothing trimmed.
+        let samples = [0.001f32, 0.0, 0.3];
+        assert_eq!(leading_zero_prefix(&samples, 8000), 0);
+    }
+
+    #[test]
+    fn leading_zero_prefix_capped() {
+        // A dead stream longer than the cap: only the cap is dropped.
+        let samples = vec![0.0f32; 10_000];
+        assert_eq!(leading_zero_prefix(&samples, 8000), 8000);
+    }
+
+    #[test]
+    fn leading_zero_prefix_keeps_mid_utterance_zeros() {
+        let samples = [0.0f32, 0.0, 0.5, 0.0, 0.0, 0.3];
+        let n = leading_zero_prefix(&samples, 8000);
+        assert_eq!(n, 2);
+        // The trimmed view keeps mid-utterance zeros (legitimate silence).
+        assert_eq!(&samples[n..], &[0.5, 0.0, 0.0, 0.3]);
     }
 }
