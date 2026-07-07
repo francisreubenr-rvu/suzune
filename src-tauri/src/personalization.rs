@@ -39,6 +39,18 @@ pub struct CorrectionRecord {
     pub raw: String,
     pub cleaned: String,
     pub corrected: String,
+    /// Tone setting active when this entry was recorded. A correction made
+    /// under a restyling tone contains reworded (not just grammar-cleaned)
+    /// text — `coordinator.rs` uses this to keep restyled corrections out
+    /// of the grammar-cleanup few-shot prompt. Lines written before this
+    /// field existed only ever recorded the default tone, so they default
+    /// to "neutral" on load.
+    #[serde(default = "default_tone")]
+    pub tone: String,
+}
+
+fn default_tone() -> String {
+    "neutral".to_string()
 }
 
 /// Load every well-formed correction record from
@@ -66,18 +78,34 @@ pub fn load_corrections(config_dir: &Path) -> Vec<CorrectionRecord> {
 }
 
 /// Append one correction record to the store, creating the config
-/// directory if needed.
+/// directory if needed. Caps the store at the newest 500 records —
+/// unbounded growth makes every dictation pay `select_few_shot`'s O(n)
+/// scoring forever.
 pub fn append_correction(config_dir: &Path, rec: &CorrectionRecord) -> Result<()> {
     std::fs::create_dir_all(config_dir)
         .with_context(|| format!("creating config dir {}", config_dir.display()))?;
     let path = config_dir.join(CORRECTIONS_FILE);
-    let mut file = std::fs::OpenOptions::new()
-        .create(true)
-        .append(true)
-        .open(&path)
-        .with_context(|| format!("opening {}", path.display()))?;
-    let line = serde_json::to_string(rec).context("serializing correction record")?;
-    writeln!(file, "{}", line).with_context(|| format!("writing {}", path.display()))?;
+    {
+        let mut file = std::fs::OpenOptions::new()
+            .create(true)
+            .append(true)
+            .open(&path)
+            .with_context(|| format!("opening {}", path.display()))?;
+        let line = serde_json::to_string(rec).context("serializing correction record")?;
+        writeln!(file, "{}", line).with_context(|| format!("writing {}", path.display()))?;
+    }
+
+    const MAX_RECORDS: usize = 500;
+    let all = load_corrections(config_dir);
+    if all.len() > MAX_RECORDS {
+        let newest = &all[all.len() - MAX_RECORDS..];
+        let mut out = String::with_capacity(newest.len() * 64);
+        for r in newest {
+            out.push_str(&serde_json::to_string(r).context("serializing correction record")?);
+            out.push('\n');
+        }
+        std::fs::write(&path, out).with_context(|| format!("rewriting {}", path.display()))?;
+    }
     Ok(())
 }
 
@@ -110,9 +138,14 @@ pub fn select_few_shot<'a>(
     }
     let raw_tokens = tokenize(raw);
     let n = corrections.len();
+    // A candidate whose raw or corrected text is very long would bloat the
+    // system prompt against the cleanup LLM's 400-token output cap and
+    // 2048 context; skip it as a few-shot example rather than truncating.
+    const MAX_EXAMPLE_CHARS: usize = 200;
     let mut scored: Vec<(f64, &CorrectionRecord)> = corrections
         .iter()
         .enumerate()
+        .filter(|(_, rec)| rec.raw.len() <= MAX_EXAMPLE_CHARS && rec.corrected.len() <= MAX_EXAMPLE_CHARS)
         .map(|(i, rec)| {
             let overlap = jaccard(&raw_tokens, &tokenize(&rec.raw));
             let recency = if n <= 1 { 1.0 } else { i as f64 / (n - 1) as f64 };
@@ -284,6 +317,7 @@ mod tests {
             raw: raw.to_string(),
             cleaned: cleaned.to_string(),
             corrected: corrected.to_string(),
+            tone: "neutral".to_string(),
         }
     }
 
@@ -317,6 +351,36 @@ mod tests {
         .unwrap();
         let loaded = load_corrections(&dir);
         assert_eq!(loaded, vec![r1]);
+        std::fs::remove_dir_all(&dir).ok();
+    }
+
+    #[test]
+    fn missing_tone_field_defaults_to_neutral() {
+        let dir = tempdir();
+        std::fs::create_dir_all(&dir).unwrap();
+        let path = dir.join(CORRECTIONS_FILE);
+        // A line written before the `tone` field existed.
+        std::fs::write(
+            &path,
+            "{\"id\":1,\"ts\":1,\"raw\":\"a\",\"cleaned\":\"b\",\"corrected\":\"c\"}\n",
+        )
+        .unwrap();
+        let loaded = load_corrections(&dir);
+        assert_eq!(loaded.len(), 1);
+        assert_eq!(loaded[0].tone, "neutral");
+        std::fs::remove_dir_all(&dir).ok();
+    }
+
+    #[test]
+    fn append_correction_caps_store_at_500_newest() {
+        let dir = tempdir();
+        for i in 1..=502u64 {
+            append_correction(&dir, &rec(i, "r", "c", "x")).unwrap();
+        }
+        let loaded = load_corrections(&dir);
+        assert_eq!(loaded.len(), 500);
+        assert_eq!(loaded.first().unwrap().id, 3);
+        assert_eq!(loaded.last().unwrap().id, 502);
         std::fs::remove_dir_all(&dir).ok();
     }
 
@@ -359,6 +423,18 @@ mod tests {
     #[test]
     fn select_few_shot_on_empty_store_is_empty() {
         assert!(select_few_shot("anything", &[], 4).is_empty());
+    }
+
+    #[test]
+    fn select_few_shot_skips_overlong_candidates() {
+        let long = "a".repeat(201);
+        let corrections = vec![
+            rec(1, &long, &long, &long),
+            rec(2, "call fransisco", "Call Fransisco.", "Call Francisco."),
+        ];
+        let picked = select_few_shot("call fransisco", &corrections, 2);
+        assert_eq!(picked.len(), 1);
+        assert_eq!(picked[0].id, 2);
     }
 
     #[test]

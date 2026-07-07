@@ -260,11 +260,31 @@ impl Worker {
 
         let text = match &self.cleanup {
             Some(client) => {
-                let selected = if self.settings.personalization_enabled {
-                    personalization::select_few_shot(&raw, &self.corrections, 4)
-                } else {
-                    Vec::new()
-                };
+                let selected: Vec<personalization::CorrectionRecord> =
+                    if self.settings.personalization_enabled {
+                        // Corrections made under a restyling tone contain
+                        // reworded text; injecting them as grammar-pass
+                        // few-shot examples would teach the faithful
+                        // cleanup pass to restyle — exactly the
+                        // cross-contamination the two-pass split exists to
+                        // prevent. `build_vocab_map` (used from
+                        // `reload_corrections`) deliberately keeps mining
+                        // from ALL records instead: its <=3-word diff cap
+                        // already bounds how much tone drift a single
+                        // mined substitution can carry.
+                        let neutral: Vec<personalization::CorrectionRecord> = self
+                            .corrections
+                            .iter()
+                            .filter(|c| c.tone == "neutral")
+                            .cloned()
+                            .collect();
+                        personalization::select_few_shot(&raw, &neutral, 4)
+                            .into_iter()
+                            .cloned()
+                            .collect()
+                    } else {
+                        Vec::new()
+                    };
                 let few_shot: Vec<FewShotExample> = selected
                     .iter()
                     .map(|c| FewShotExample {
@@ -303,9 +323,10 @@ impl Worker {
     fn push_history(&mut self, raw: String, cleaned: String) {
         let id = self.history.next_id.fetch_add(1, Ordering::SeqCst);
         let ts = personalization::now_unix();
+        let tone = self.settings.tone.clone();
         {
-            let mut buf = self.history.buffer.lock().unwrap();
-            buf.push_back(HistoryEntry { id, raw, cleaned, ts });
+            let mut buf = self.history.buffer.lock().unwrap_or_else(|e| e.into_inner());
+            buf.push_back(HistoryEntry { id, raw, cleaned, ts, tone });
             while buf.len() > 50 {
                 buf.pop_front();
             }

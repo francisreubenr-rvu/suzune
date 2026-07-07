@@ -22,6 +22,7 @@ interface HistoryEntry {
   raw: string;
   cleaned: string;
   ts: number;
+  tone?: string;
 }
 
 interface CorrectionRecord {
@@ -30,6 +31,7 @@ interface CorrectionRecord {
   raw: string;
   cleaned: string;
   corrected: string;
+  tone?: string;
 }
 
 const GRAMMAR_LEVELS: { value: string; label: string; hint: string }[] = [
@@ -75,6 +77,9 @@ function prettyShortcut(s: string): string {
 
 export default function SettingsPage() {
   const [settings, setSettings] = useState<Settings | null>(null);
+  // Mirrors the last-persisted settings (as of load / successful save), so the
+  // UI can tell "toggled locally" apart from "actually saved to disk".
+  const [savedSettings, setSavedSettings] = useState<Settings | null>(null);
   const [devices, setDevices] = useState<string[]>([]);
   const [capturing, setCapturing] = useState(false);
   const [captureStuck, setCaptureStuck] = useState(false);
@@ -86,7 +91,10 @@ export default function SettingsPage() {
   const [fixText, setFixText] = useState("");
 
   useEffect(() => {
-    invoke<Settings>("get_settings").then(setSettings).catch(console.error);
+    invoke<Settings>("get_settings").then((s) => {
+      setSettings(s);
+      setSavedSettings(s);
+    }).catch(console.error);
     invoke<string[]>("list_input_devices").then(setDevices).catch(console.error);
   }, []);
 
@@ -120,10 +128,16 @@ export default function SettingsPage() {
         setCapturing(false);
       }
     };
+    // Losing window focus mid-capture (e.g. Cmd+Tab, clicking another app)
+    // means the eventual keydown, if any, won't be the user's intended
+    // combination for this app — cancel rather than staying stuck listening.
+    const onBlur = () => setCapturing(false);
     window.addEventListener("keydown", onKey, true);
+    window.addEventListener("blur", onBlur);
     const stuckTimer = window.setTimeout(() => setCaptureStuck(true), 4000);
     return () => {
       window.removeEventListener("keydown", onKey, true);
+      window.removeEventListener("blur", onBlur);
       window.clearTimeout(stuckTimer);
     };
   }, [capturing]);
@@ -132,6 +146,7 @@ export default function SettingsPage() {
     if (!settings) return;
     try {
       await invoke("save_settings", { newSettings: settings });
+      setSavedSettings(settings);
       setStatus({ kind: "ok", msg: "Saved. Changes are live." });
     } catch (e) {
       setStatus({ kind: "err", msg: String(e) });
@@ -159,6 +174,13 @@ export default function SettingsPage() {
   }, [settings?.personalization_enabled, refreshHistory, refreshCorrections]);
 
   const startFix = (h: HistoryEntry) => {
+    if (fixingId !== null && fixingId !== h.id) {
+      const current = history.find((e) => e.id === fixingId);
+      const draftDirty = !!current && fixText.trim() !== current.cleaned.trim();
+      if (draftDirty && !window.confirm("Discard your unsaved correction?")) {
+        return;
+      }
+    }
     setFixingId(h.id);
     setFixText(h.cleaned);
   };
@@ -169,8 +191,14 @@ export default function SettingsPage() {
   };
 
   const submitFix = async (id: number) => {
+    const entry = history.find((h) => h.id === id);
+    const trimmed = fixText.trim();
+    if (!entry || trimmed === "" || trimmed === entry.cleaned.trim()) {
+      cancelFix();
+      return;
+    }
     try {
-      await invoke("submit_correction", { historyId: id, correctedText: fixText });
+      await invoke("submit_correction", { historyId: id, correctedText: trimmed });
       setFixingId(null);
       setFixText("");
       refreshCorrections();
@@ -190,6 +218,11 @@ export default function SettingsPage() {
   };
 
   if (!settings) return <main className="page"><p>Loading...</p></main>;
+
+  // True while the toggle reads on locally but the persisted setting hasn't
+  // caught up — the backend won't actually record anything until Save runs.
+  const personalizationUnsaved =
+    settings.personalization_enabled && !savedSettings?.personalization_enabled;
 
   return (
     <main className="page">
@@ -339,9 +372,16 @@ export default function SettingsPage() {
 
         {settings.personalization_enabled && (
           <div className="history">
+            {personalizationUnsaved && (
+              <p className="field__hint field__hint--warn">
+                Click "Save changes" below to activate — nothing is recorded until saved.
+              </p>
+            )}
             <h3 className="page__subhead">Recent dictations</h3>
             {history.length === 0 ? (
-              <p className="history-empty">Nothing yet — dictate something and it will show up here.</p>
+              !personalizationUnsaved && (
+                <p className="history-empty">Nothing yet — dictate something and it will show up here.</p>
+              )
             ) : (
               <div className="history-list">
                 {history.slice().reverse().map((h) => (
@@ -355,7 +395,13 @@ export default function SettingsPage() {
                           rows={2}
                         />
                         <div className="history-item__actions">
-                          <button className="link-btn" onClick={() => submitFix(h.id)}>Save correction</button>
+                          <button
+                            className="link-btn"
+                            onClick={() => submitFix(h.id)}
+                            disabled={fixText.trim() === "" || fixText.trim() === h.cleaned.trim()}
+                          >
+                            Save correction
+                          </button>
                           <button className="link-btn" onClick={cancelFix}>Cancel</button>
                         </div>
                       </div>
@@ -375,7 +421,7 @@ export default function SettingsPage() {
             ) : (
               <div className="corrections-list">
                 {corrections.slice().reverse().map((c) => (
-                  <div className="corrections-list__item" key={c.id}>
+                  <div className="corrections-list__item" key={`${c.ts}-${c.id}`}>
                     "{c.cleaned}" → "{c.corrected}"
                   </div>
                 ))}

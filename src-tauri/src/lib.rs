@@ -32,6 +32,9 @@ pub struct HistoryEntry {
     pub raw: String,
     pub cleaned: String,
     pub ts: u64,
+    /// Tone setting active when this entry was produced; copied into
+    /// `CorrectionRecord` if the user later corrects it.
+    pub tone: String,
 }
 
 /// Shared handle for the personalization feature: the rolling in-memory
@@ -91,7 +94,35 @@ fn list_input_devices() -> Vec<String> {
 /// enabled — see `HistoryState`'s doc comment). Never touches disk.
 #[tauri::command]
 fn get_recent_history(state: tauri::State<HistoryState>) -> Vec<HistoryEntry> {
-    state.buffer.lock().unwrap().iter().cloned().collect()
+    state
+        .buffer
+        .lock()
+        .unwrap_or_else(|e| e.into_inner())
+        .iter()
+        .cloned()
+        .collect()
+}
+
+/// Collapse `\r`/`\n` runs into a single space. Closes a prompt-injection
+/// surface at the persistence boundary: corrections.jsonl fields are later
+/// embedded verbatim into a few-shot prompt block as
+/// `"\nInput: {}\nOutput: {}"`, so an embedded newline could fabricate a
+/// fake example turn.
+fn normalize_single_line(s: &str) -> String {
+    let mut out = String::with_capacity(s.len());
+    let mut last_was_newline = false;
+    for ch in s.chars() {
+        if ch == '\r' || ch == '\n' {
+            if !last_was_newline {
+                out.push(' ');
+            }
+            last_was_newline = true;
+        } else {
+            out.push(ch);
+            last_was_newline = false;
+        }
+    }
+    out.trim().to_string()
 }
 
 /// The user has flagged a history entry as wrong and typed the correct
@@ -105,7 +136,7 @@ fn submit_correction(
     corrected_text: String,
 ) -> Result<(), String> {
     let entry = {
-        let buf = state.buffer.lock().unwrap();
+        let buf = state.buffer.lock().unwrap_or_else(|e| e.into_inner());
         buf.iter().find(|e| e.id == history_id).cloned()
     }
     .ok_or_else(|| {
@@ -113,12 +144,24 @@ fn submit_correction(
             .to_string()
     })?;
 
+    let corrected = normalize_single_line(&corrected_text);
+    if corrected.is_empty() {
+        return Err("correction text can't be empty".to_string());
+    }
+
+    // corrections.jsonl ids are session-independent (unlike HistoryEntry's
+    // AtomicU64, which resets to 1 every launch) — derive the next one from
+    // what's actually on disk so ids stay unique across restarts.
+    let existing = personalization::load_corrections(&state.config_dir);
+    let next_id = existing.iter().map(|r| r.id).max().unwrap_or(0) + 1;
+
     let record = personalization::CorrectionRecord {
-        id: entry.id,
+        id: next_id,
         ts: personalization::now_unix(),
-        raw: entry.raw,
-        cleaned: entry.cleaned,
-        corrected: corrected_text,
+        raw: normalize_single_line(&entry.raw),
+        cleaned: normalize_single_line(&entry.cleaned),
+        corrected,
+        tone: entry.tone,
     };
     personalization::append_correction(&state.config_dir, &record)
         .map_err(|e| format!("could not save correction: {e}"))?;

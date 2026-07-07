@@ -135,6 +135,23 @@ intended effect. Latency: grammar-only passes stayed at the existing
 median (up to ~930ms), as anticipated in the design — only paid when tone is
 explicitly set to non-neutral.
 
+#### Addendum (2026-07-07, later the same day)
+
+Both residual defects noted above were subsequently addressed. The
+code-conversion leak on samples #7/#16 is now closed at the root rather than
+patched at the prompt level: `client.rs` adds a deterministic
+`looks_code_adjacent` check on Pass 1's output (backticks, non-URL `//`,
+whole-word programming nouns, "error handling") and skips Pass 2 entirely
+when it fires, so a code-adjacent grammar-pass result can no longer reach
+the tone-restyle prompt regardless of which tone is selected — live-revalidated
+against the production model with samples #7 and #16 clean under all four
+non-neutral tones. Butler's "X actually no Y" self-correction miss was fixed
+with a second Butler-specific few-shot example (rather than further rule-3
+wording changes, which had already been tried twice without effect); example
+order turned out to be load-bearing — the hands-off anchor example must come
+last or contraction preservation regresses — and the fix was live-validated
+on sample #2.
+
 ### Robustness fixes from live testing (same session)
 
 - Continuity/iPhone mics ("Tobias Microphone") advertise stream configs that fail at build time once the phone sleeps or renegotiates — the recorder now tries every config of every candidate device (system default -> built-in -> rest) until one builds AND plays, instead of erroring on the first failure.

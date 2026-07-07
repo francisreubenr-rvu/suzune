@@ -298,7 +298,12 @@ select {
   border-radius: 6px;
 }
 
-.history-item__text { font-size: 0.95rem; line-height: 1.5; }
+.history-item__text {
+  font-size: 0.95rem;
+  line-height: 1.5;
+  overflow-wrap: anywhere;
+  word-break: break-word;
+}
 
 .history-item__actions { margin-top: 0.5rem; display: flex; gap: 1rem; align-items: center; }
 
@@ -328,6 +333,8 @@ select {
   cursor: pointer;
 }
 .link-btn:hover { text-decoration: underline; }
+.link-btn:disabled { opacity: 0.45; cursor: default; }
+.link-btn:disabled:hover { text-decoration: none; }
 
 .corrections-list { display: flex; flex-direction: column; gap: 0.2rem; max-width: 40rem; margin-top: 0.6rem; }
 
@@ -336,6 +343,8 @@ select {
   color: var(--ink-soft);
   padding: 0.4rem 0;
   border-bottom: 1px solid var(--rule);
+  overflow-wrap: anywhere;
+  word-break: break-word;
 }
 .corrections-list__item:last-child { border-bottom: none; }
 

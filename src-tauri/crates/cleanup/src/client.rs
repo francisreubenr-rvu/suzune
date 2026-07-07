@@ -69,10 +69,21 @@ impl CleanupClient {
     /// restyle error falls back to Pass 1's already-clean output rather
     /// than failing the whole call (matching the fallback philosophy
     /// already used one level up in `coordinator.rs`).
+    ///
+    /// Pass 2 is skipped entirely when Pass 1's output looks code-adjacent
+    /// (see [`looks_code_adjacent`]) — the S3 follow-up bake-off showed the
+    /// restyle pass occasionally converts code-describing dictation into
+    /// actual code blocks despite its own prompt rule. Tradeoff: users lose
+    /// tone restyling on code-adjacent dictation, which is strictly better
+    /// than risking fabricated code blocks.
     pub fn clean(&self, raw_transcript: &str, few_shot: &[FewShotExample]) -> Result<String> {
         let cleaned = self.run_pass(&self.pass1_system(few_shot), raw_transcript)?;
         match &self.tone_prompt {
             None => Ok(cleaned),
+            Some(_) if looks_code_adjacent(&cleaned) => {
+                log::info!("code-adjacent text detected, skipping tone restyle to avoid fabricated code");
+                Ok(cleaned)
+            }
             Some(tone_system) => match self.run_pass(tone_system, &cleaned) {
                 Ok(restyled) if !restyled.is_empty() => Ok(restyled),
                 Ok(_) => Ok(cleaned),
@@ -169,6 +180,39 @@ fn parse_response(body: &str) -> Result<String> {
     Ok(strip_think(content).trim().to_string())
 }
 
+/// Programming nouns that mark dictation as code-adjacent. Curated against
+/// bake-off samples #7 and #16 (the two that leaked code syntax in Pass 2)
+/// while staying silent on ordinary prose: deliberately excludes ambiguous
+/// words like "exception" ("no exceptions!") and "bug" ("stop bugging me")
+/// — "error handling" as a phrase covers #16's error case unambiguously.
+const CODE_MARKER_WORDS: &[&str] = &[
+    "function", "functions", "code", "comment", "comments", "todo", "null", "variable",
+    "variables", "parse", "parses", "parsed", "parsing", "parser", "compile", "compiles",
+    "compiled", "compiler",
+];
+
+/// Conservative detector for code-adjacent dictation: true if the text
+/// contains a backtick, a `//` outside a URL scheme, or at least one
+/// whole-word hit from [`CODE_MARKER_WORDS`] (case-insensitive), or the
+/// phrase "error handling". False positives only cost a skipped tone
+/// restyle, so common prose-ambiguous programming words are left out
+/// rather than risking tone loss on ordinary dictation.
+fn looks_code_adjacent(s: &str) -> bool {
+    if s.contains('`') {
+        return true;
+    }
+    if s.replace("://", ":").contains("//") {
+        return true;
+    }
+    let lower = s.to_lowercase();
+    let words: Vec<&str> = lower
+        .split(|c: char| !c.is_alphanumeric())
+        .filter(|w| !w.is_empty())
+        .collect();
+    words.iter().any(|w| CODE_MARKER_WORDS.contains(w))
+        || words.windows(2).any(|pair| pair == ["error", "handling"])
+}
+
 /// Strip a single leading `<think>...</think>` reasoning block, if present.
 fn strip_think(s: &str) -> &str {
     let trimmed = s.trim_start();
@@ -255,5 +299,50 @@ mod tests {
     fn non_neutral_tone_has_a_tone_prompt() {
         let client = CleanupClient::new("http://127.0.0.1:1", GrammarLevel::Standard, Tone::Playful);
         assert!(client.tone_prompt.is_some());
+    }
+
+    #[test]
+    fn code_adjacent_fires_on_sample_7() {
+        // Bake-off sample #7, raw and as cleaned by Pass 1.
+        assert!(looks_code_adjacent(
+            "the function should return null wait no it should throw an exception when the input is empty"
+        ));
+        assert!(looks_code_adjacent(
+            "The function should throw an exception when the input is empty."
+        ));
+    }
+
+    #[test]
+    fn code_adjacent_fires_on_sample_16() {
+        // Bake-off sample #16, raw and as cleaned by Pass 1.
+        assert!(looks_code_adjacent(
+            "add a todo comment above the parse function saying this needs error handling for malformed json"
+        ));
+        assert!(looks_code_adjacent(
+            "Add a todo comment above the parse function saying this needs error handling for malformed JSON."
+        ));
+    }
+
+    #[test]
+    fn code_adjacent_fires_on_code_syntax() {
+        assert!(looks_code_adjacent("the line reads `return early`"));
+        assert!(looks_code_adjacent("// fix this before shipping"));
+    }
+
+    #[test]
+    fn code_adjacent_silent_on_plain_prose() {
+        assert!(!looks_code_adjacent("I think we should ship this on Monday."));
+    }
+
+    #[test]
+    fn code_adjacent_silent_on_dramatic_prose_with_exceptions() {
+        // "exception" appears in ordinary dramatic-tone prose, so it must
+        // not be a marker word.
+        assert!(!looks_code_adjacent("By 6pm sharp, no exceptions!"));
+    }
+
+    #[test]
+    fn code_adjacent_silent_on_url_double_slash() {
+        assert!(!looks_code_adjacent("Check the page at https://example.com for details."));
     }
 }

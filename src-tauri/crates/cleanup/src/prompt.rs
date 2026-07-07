@@ -168,13 +168,20 @@ fn preservation_rule(level: GrammarLevel) -> &'static str {
     }
 }
 
-/// One additional level-anchoring example, only for the two extremes
-/// furthest from the validated Casual baseline (bounded prompt growth,
-/// targeted at the levels most likely to under- or over-correct).
+/// Additional level-anchoring examples, only for the two extremes furthest
+/// from the validated Casual baseline (bounded prompt growth, targeted at
+/// the levels most likely to under- or over-correct). Butler carries a
+/// second example pinning "X actually no Y" self-correction: its hands-off
+/// rule-3 framing shadowed rule 1 on that phrasing (S3 follow-up, bake-off
+/// sample #2), and two rounds of rule rewording failed where a few-shot
+/// example is the mechanism that fixed v3.1's "no wait" miss on this model.
+/// Butler's example order is load-bearing on this model: the hands-off
+/// anchor must come last — with the correction example last instead,
+/// Butler started rewriting contractions ("were gonna" -> "we'll").
 fn extra_example(level: GrammarLevel) -> Option<&'static str> {
     match level {
         GrammarLevel::Butler => Some(
-            "Input: so yeah i think were gonna need like three more days honestly\nOutput: So yeah, I think were gonna need like three more days, honestly.",
+            "Input: send the draft by 5pm actually no 6pm and keep the tone casual yeah\nOutput: Send the draft by 6pm and keep the tone casual, yeah.\nInput: so yeah i think were gonna need like three more days honestly\nOutput: So yeah, I think were gonna need like three more days, honestly.",
         ),
         GrammarLevel::Oxford => Some(
             "Input: so yeah i think we're gonna need like three more days honestly\nOutput: I think we are going to need three more days.",
@@ -259,6 +266,13 @@ mod tests {
     #[test]
     fn casual_matches_v3_1() {
         assert_eq!(build_grammar_prompt(GrammarLevel::Casual), SYSTEM_PROMPT_V3);
+    }
+
+    #[test]
+    fn butler_carries_the_actually_no_self_correction_example() {
+        let prompt = build_grammar_prompt(GrammarLevel::Butler);
+        assert!(prompt.contains("Input: send the draft by 5pm actually no 6pm and keep the tone casual yeah"));
+        assert!(prompt.contains("Output: Send the draft by 6pm and keep the tone casual, yeah."));
     }
 
     #[test]
