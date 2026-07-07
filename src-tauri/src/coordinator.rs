@@ -240,8 +240,11 @@ impl Worker {
             // stale/mismatched Microphone TCC grant (e.g. after re-signing
             // the app with a new identity) looks identical to a hardware
             // problem without this hint.
+            let device = recorder.device_name().unwrap_or("unknown device");
             anyhow::bail!(
-                "didn't catch any speech{}",
+                "didn't catch any speech (mic: {}, peak {:.3}){}",
+                device,
+                peak,
                 if peak < 0.005 {
                     " — check your microphone, or macOS Privacy & Security > Microphone permission for this app"
                 } else {

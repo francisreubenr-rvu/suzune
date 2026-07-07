@@ -57,6 +57,10 @@ pub struct Recorder {
     frame_tx: crossbeam_channel::Sender<Vec<f32>>,
     frame_rx: crossbeam_channel::Receiver<Vec<f32>>,
     preferred_device: Option<String>,
+    /// Name of the input device actually opened, set once `open_device`
+    /// succeeds. Diagnostic-only — lets callers report which mic silence
+    /// came from instead of just "no speech detected".
+    device_name: Option<String>,
 }
 
 impl Recorder {
@@ -80,6 +84,7 @@ impl Recorder {
             frame_tx,
             frame_rx,
             preferred_device,
+            device_name: None,
         }
     }
 
@@ -87,6 +92,13 @@ impl Recorder {
     /// recording is active. Clone freely — every clone gets every frame.
     pub fn sample_receiver(&self) -> crossbeam_channel::Receiver<Vec<f32>> {
         self.frame_rx.clone()
+    }
+
+    /// Name of the input device actually opened for capture, once `start()`
+    /// has succeeded at least once. `None` before the first successful
+    /// `start()` (device access is deferred, see [`Recorder::new`]).
+    pub fn device_name(&self) -> Option<&str> {
+        self.device_name.as_deref()
     }
 
     /// Open the microphone (first call only) and begin recording. Returns a
@@ -124,7 +136,7 @@ impl Recorder {
     fn open_device(&mut self) -> Result<()> {
         let (raw_tx, raw_rx) = mpsc::channel::<RawChunk>();
         let (cmd_tx, cmd_rx) = mpsc::channel::<Cmd>();
-        let (init_tx, init_rx) = mpsc::sync_channel::<Result<(), String>>(1);
+        let (init_tx, init_rx) = mpsc::sync_channel::<Result<String, String>>(1);
         let frame_tx = self.frame_tx.clone();
         let preferred = self.preferred_device.clone();
 
@@ -136,21 +148,21 @@ impl Recorder {
             // build time (Continuity/Bluetooth mics that have gone
             // away or renegotiated). Try every candidate device until
             // one actually yields a playing stream.
-            let init_result = (|| -> Result<(cpal::Stream, u32), String> {
+            let init_result = (|| -> Result<(cpal::Stream, u32, String), String> {
                 let host = cpal::default_host();
                 let mut last_err = "no input microphone found".to_string();
                 for device in candidate_devices(&host, preferred.as_deref()) {
+                    let name = device
+                        .name()
+                        .unwrap_or_else(|_| "unknown device".to_string());
                     match try_open_stream(
                         &device,
                         raw_tx.clone(),
                         stream_stop_flag.clone(),
                     ) {
-                        Ok(ok) => return Ok(ok),
+                        Ok((stream, in_rate)) => return Ok((stream, in_rate, name)),
                         Err(e) => {
-                            log::warn!(
-                                "suzune-audio: device {:?} unusable: {e}",
-                                device.name()
-                            );
+                            log::warn!("suzune-audio: device {name:?} unusable: {e}");
                             last_err = e;
                         }
                     }
@@ -159,8 +171,8 @@ impl Recorder {
             })();
 
             match init_result {
-                Ok((stream, in_rate)) => {
-                    let _ = init_tx.send(Ok(()));
+                Ok((stream, in_rate, name)) => {
+                    let _ = init_tx.send(Ok(name));
                     run_worker(in_rate, raw_rx, cmd_rx, frame_tx, stop_flag);
                     drop(stream);
                 }
@@ -172,9 +184,10 @@ impl Recorder {
         });
 
         match init_rx.recv() {
-            Ok(Ok(())) => {
+            Ok(Ok(name)) => {
                 self.cmd_tx = Some(cmd_tx);
                 self.worker = Some(worker);
+                self.device_name = Some(name);
                 Ok(())
             }
             Ok(Err(msg)) => {
