@@ -66,7 +66,7 @@ body {
   min-height: 100%;
 }
 
-/* perspective root for the 3D book */
+/* perspective root (kept for potential future 3D touches) */
 .stage {
   perspective: 1400px;
 }
@@ -183,15 +183,14 @@ a { color: inherit; }
 
 .hero {
   padding: 4.5rem 0 3rem;
-  display: grid;
-  grid-template-columns: 1.05fr 0.95fr;
-  gap: 2.5rem;
+  display: flex;
+  flex-direction: column;
   align-items: center;
+  gap: 2.6rem;
+  text-align: center;
 }
 
-@media (max-width: 900px) {
-  .hero { grid-template-columns: 1fr; padding-top: 3rem; }
-}
+.hero__intro { max-width: 40rem; }
 
 .hero__eyebrow {
   display: inline-block;
@@ -209,7 +208,7 @@ a { color: inherit; }
 .hero h1 .dot { color: var(--accent); }
 
 .hero__tagline {
-  margin-top: 1.3rem;
+  margin: 1.3rem auto 0;
   max-width: 34rem;
   font-size: 1.18rem;
   color: var(--ink-soft);
@@ -219,6 +218,7 @@ a { color: inherit; }
   margin-top: 2.1rem;
   display: flex;
   align-items: center;
+  justify-content: center;
   flex-wrap: wrap;
   gap: 1rem;
 }
@@ -244,165 +244,285 @@ kbd {
 }
 
 .hero__note {
-  margin-top: 1.6rem;
+  margin: 1.6rem auto 0;
   font-size: 0.85rem;
   color: var(--ink-soft);
   font-style: italic;
   max-width: 30rem;
 }
 
-/* ---------- 3D book ---------- */
+/* ---------- interactive demo window ---------- */
 
-.book-scene {
+.demo-scene {
   position: relative;
-  height: 420px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-}
-
-@media (max-width: 900px) {
-  .book-scene { height: 320px; margin-top: 1rem; }
-}
-
-@media (max-width: 460px) {
-  .book-scene { height: 260px; }
-}
-
-.book {
-  position: relative;
-  width: 240px;
-  height: 340px;
-  transform-style: preserve-3d;
-  transform: rotateX(8deg) rotateY(-22deg);
-  transition: transform 120ms ease-out;
-  will-change: transform;
-}
-
-@media (max-width: 900px) {
-  .book { width: 190px; height: 270px; }
-}
-
-@media (max-width: 460px) {
-  .book { width: 160px; height: 228px; }
-}
-
-.book__face {
-  position: absolute;
-  inset: 0;
-  border-radius: 3px 8px 8px 3px;
-  backface-visibility: hidden;
-}
-
-.book__cover {
-  background:
-    radial-gradient(140% 100% at 15% 0%, rgba(255,255,255,0.06), transparent 55%),
-    linear-gradient(155deg, var(--book-cover) 0%, var(--book-cover-2) 100%);
-  box-shadow:
-    0 30px 60px -18px var(--shadow-color),
-    0 8px 18px -6px var(--shadow-color);
+  width: 100%;
   display: flex;
   flex-direction: column;
   align-items: center;
-  justify-content: center;
-  gap: 0.6rem;
+  padding-bottom: 2.6rem;
+}
+
+.demo-window {
+  position: relative;
+  width: 100%;
+  max-width: 640px;
+  border-radius: 10px;
+  overflow: hidden;
+  box-shadow: 0 30px 70px var(--shadow-color), 0 4px 14px rgba(0,0,0,0.18);
+  border: 1px solid var(--rule);
+  background: var(--paper);
+  text-align: left;
+}
+
+.demo-titlebar {
+  position: relative;
+  height: 38px;
+  background: var(--paper-deep);
+  border-bottom: 1px solid var(--rule);
+  display: flex;
+  align-items: center;
   padding: 0 14px;
-  text-align: center;
-  color: var(--paper);
+  gap: 8px;
+  flex-shrink: 0;
 }
 
-.book__cover .book__title {
-  font-family: var(--serif);
-  font-style: italic;
-  font-size: 2.1rem;
-  letter-spacing: 0.01em;
+.demo-dot {
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+  border: 1px solid rgba(0,0,0,0.12);
 }
+.demo-dot--red { background: #ff5f57; }
+.demo-dot--yellow { background: #febc2e; }
+.demo-dot--green { background: #28c840; }
 
-@media (max-width: 460px) {
-  .book__cover .book__title { font-size: 1.6rem; }
-}
-
-.book__cover .book__title .dot { color: var(--accent); }
-
-.book__cover .book__sub {
-  font-family: var(--mono);
-  font-size: 0.62rem;
-  text-transform: uppercase;
-  letter-spacing: 0.22em;
-  color: rgba(246, 241, 231, 0.55);
-  white-space: nowrap;
-}
-
-@media (max-width: 460px) {
-  .book__cover .book__sub { font-size: 0.5rem; letter-spacing: 0.13em; }
-}
-
-.book__cover::after {
-  /* embossed rule near the spine edge */
-  content: "";
+.demo-titlebar__title {
   position: absolute;
-  left: 22px;
-  top: 24px;
-  bottom: 24px;
-  width: 1px;
-  background: rgba(246, 241, 231, 0.14);
-}
-
-.book__spine {
-  width: 28px;
-  left: -28px;
-  transform: rotateY(90deg);
-  transform-origin: right center;
-  background: linear-gradient(180deg, var(--book-cover) 0%, var(--book-cover-2) 100%);
-  border-radius: 3px 0 0 3px;
-}
-
-.book__pages {
-  width: 14px;
-  right: -14px;
-  transform: rotateY(90deg);
-  transform-origin: left center;
-  background: repeating-linear-gradient(
-    180deg,
-    var(--book-page) 0px, var(--book-page) 2px,
-    var(--paper-deep) 2px, var(--paper-deep) 3px
-  );
-  border-radius: 0 3px 3px 0;
-}
-
-.book__back {
-  transform: translateZ(-14px);
-  background: linear-gradient(155deg, var(--book-cover-2) 0%, var(--book-cover) 100%);
-}
-
-/* floating overlay pill replica, hovering above the book */
-.pill-float {
-  position: absolute;
-  top: -18px;
   left: 50%;
-  transform: translate(-50%, 0) translateZ(60px);
-  transform-style: preserve-3d;
-  animation: pill-hover 4.2s ease-in-out infinite;
+  transform: translateX(-50%);
+  font-family: var(--serif);
+  font-size: 0.8rem;
+  font-weight: 600;
+  color: var(--ink);
 }
 
-@keyframes pill-hover {
-  0%, 100% { transform: translate(-50%, 0) translateZ(60px); }
-  50%      { transform: translate(-50%, -10px) translateZ(60px); }
+.demo-content {
+  max-height: 480px;
+  overflow-y: auto;
+  background:
+    linear-gradient(var(--grid) 1px, transparent 1px) 0 0 / 100% 28px,
+    linear-gradient(90deg, var(--grid) 1px, transparent 1px) 0 0 / 28px 100%,
+    var(--paper);
+  padding: 2.2rem 2rem;
+}
+
+@media (max-width: 640px) {
+  .demo-content { padding: 1.6rem 1.4rem; max-height: 420px; }
+}
+
+.demo-content h1 { font-size: 2rem; font-weight: 600; letter-spacing: 0.01em; }
+.demo-content .page__masthead { border-bottom: 3px double var(--rule); padding-bottom: 1rem; margin-bottom: 1.5rem; }
+.demo-content .page__tagline { color: var(--ink-soft); font-style: italic; margin-top: 0.2rem; font-size: 0.92rem; }
+.demo-content .page__section { margin-bottom: 1.7rem; }
+.demo-content .page__section h2 {
+  font-family: var(--mono);
+  font-size: 0.76rem;
+  font-weight: 500;
+  text-transform: uppercase;
+  letter-spacing: 0.13em;
+  color: var(--ink-soft);
+  border-bottom: 1px solid var(--rule);
+  padding-bottom: 0.3rem;
+  margin-bottom: 0.7rem;
+}
+
+.demo-content .field { display: flex; flex-direction: column; gap: 0.35rem; max-width: 30rem; margin-bottom: 0.9rem; }
+.demo-content .field:last-child { margin-bottom: 0; }
+.demo-content .field__hint { font-size: 0.78rem; color: var(--ink-soft); font-style: italic; }
+.demo-content .field__hint--warn { color: var(--accent); }
+.demo-content .field__label { font-family: var(--mono); font-size: 0.72rem; text-transform: uppercase; letter-spacing: 0.08em; color: var(--ink-soft); }
+
+.demo-content .capture {
+  font-family: var(--mono);
+  font-size: 0.92rem;
+  text-align: left;
+  padding: 0.62rem 0.8rem;
+  background: var(--paper-deep);
+  color: var(--ink);
+  border: 1px solid var(--rule);
+  border-bottom-width: 2px;
+  border-radius: 6px;
+  cursor: pointer;
+  width: 100%;
+}
+.demo-content .capture--active { border-color: var(--accent); color: var(--accent); }
+
+.demo-content .segmented { display: flex; gap: 0.6rem; flex-wrap: wrap; }
+.demo-content .seg {
+  flex: 1 1 9rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.15rem;
+  align-items: flex-start;
+  padding: 0.68rem 0.85rem;
+  background: var(--paper-deep);
+  color: var(--ink);
+  border: 1px solid var(--rule);
+  border-bottom-width: 2px;
+  border-radius: 6px;
+  cursor: pointer;
+  font-family: var(--serif);
+  font-size: 0.92rem;
+}
+.demo-content .seg small { font-family: var(--mono); font-size: 0.66rem; color: var(--ink-soft); font-style: normal; }
+.demo-content .seg--on { border-color: var(--accent); box-shadow: inset 0 0 0 1px var(--accent); }
+.demo-content .seg--on small { color: var(--accent); }
+.demo-content .seg:active { transform: translateY(1px); }
+
+.demo-content select, .demo-content input[type="text"] {
+  font-family: var(--serif);
+  font-size: 0.9rem;
+  padding: 0.55rem 0.75rem;
+  background: var(--paper-deep);
+  color: var(--ink);
+  border: 1px solid var(--rule);
+  border-bottom-width: 2px;
+  border-radius: 6px;
+  width: 100%;
+  box-sizing: border-box;
+}
+.demo-content select { cursor: pointer; }
+.demo-content .field--row { flex-direction: row; align-items: center; flex-wrap: wrap; gap: 0.5rem; }
+.demo-content .field--row input[type="text"] { flex: 1 1 8rem; min-width: 0; width: auto; }
+.demo-content .field__arrow { color: var(--ink-soft); font-size: 1rem; }
+
+.demo-content .toggle { display: flex; align-items: flex-start; gap: 0.55rem; cursor: pointer; max-width: 34rem; line-height: 1.5; font-size: 0.9rem; }
+.demo-content .toggle input { margin-top: 0.28rem; accent-color: var(--accent); width: 1rem; height: 1rem; flex-shrink: 0; }
+
+.demo-content .link-btn {
+  font-family: var(--mono);
+  font-size: 0.7rem;
+  text-transform: uppercase;
+  letter-spacing: 0.07em;
+  color: var(--accent);
+  background: none;
+  border: none;
+  padding: 0;
+  cursor: pointer;
+}
+.demo-content .link-btn:hover { text-decoration: underline; }
+.demo-content .link-btn:disabled { opacity: 0.4; cursor: default; }
+.demo-content .link-btn:disabled:hover { text-decoration: none; }
+
+.demo-content .corrections-list { display: flex; flex-direction: column; gap: 0.15rem; margin-top: 0.5rem; }
+.demo-content .corrections-list__item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.6rem;
+  font-size: 0.82rem;
+  color: var(--ink-soft);
+  padding: 0.35rem 0;
+  border-bottom: 1px solid var(--rule);
+  overflow-wrap: anywhere;
+}
+.demo-content .corrections-list__item:last-child { border-bottom: none; }
+
+.demo-content .history-list { display: flex; flex-direction: column; gap: 0.5rem; }
+.demo-content .history-item { padding: 0.6rem 0.8rem; background: var(--paper-deep); border: 1px solid var(--rule); border-radius: 6px; }
+.demo-content .history-item__text { font-size: 0.88rem; line-height: 1.5; overflow-wrap: anywhere; }
+.demo-content .history-item__actions { margin-top: 0.45rem; display: flex; gap: 0.9rem; align-items: center; }
+.demo-content .history-item__fix { margin-top: 0.5rem; display: flex; flex-direction: column; gap: 0.4rem; }
+.demo-content .history-item__fix textarea {
+  font-family: var(--serif);
+  font-size: 0.88rem;
+  padding: 0.5rem 0.6rem;
+  background: var(--paper);
+  color: var(--ink);
+  border: 1px solid var(--rule);
+  border-radius: 6px;
+  resize: vertical;
+  min-height: 3rem;
+  width: 100%;
+  box-sizing: border-box;
+}
+.demo-content .history-empty { font-size: 0.82rem; color: var(--ink-soft); font-style: italic; }
+.demo-content .page__subhead { margin-top: 1.1rem; margin-bottom: 0.5rem; font-family: var(--mono); font-size: 0.7rem; text-transform: uppercase; letter-spacing: 0.11em; color: var(--ink-soft); }
+
+.demo-content .danger {
+  margin-top: 0.9rem;
+  font-family: var(--mono);
+  font-size: 0.72rem;
+  text-transform: uppercase;
+  letter-spacing: 0.07em;
+  padding: 0.45rem 0.9rem;
+  background: var(--paper-deep);
+  color: var(--accent);
+  border: 1px solid var(--accent);
+  border-radius: 6px;
+  cursor: pointer;
+}
+
+.demo-content .page__actions { margin-top: 1.9rem; padding-top: 1.2rem; border-top: 3px double var(--rule); display: flex; align-items: center; gap: 1rem; flex-wrap: wrap; }
+.demo-content .save {
+  font-family: var(--serif);
+  font-size: 0.95rem;
+  padding: 0.55rem 1.4rem;
+  background: var(--accent);
+  color: var(--paper);
+  border: 1px solid var(--accent);
+  border-bottom-width: 3px;
+  border-radius: 6px;
+  cursor: pointer;
+}
+.demo-content .save:active { transform: translateY(1px); border-bottom-width: 2px; }
+.demo-content .status { font-size: 0.85rem; font-style: italic; }
+.demo-content .status--ok { color: #4a6b3a; }
+.demo-content .status--err { color: var(--accent); }
+@media (prefers-color-scheme: dark) { .demo-content .status--ok { color: #9ac07f; } }
+
+.demo-content .setup__lede { line-height: 1.6; max-width: 40ch; margin-bottom: 1.3rem; font-size: 0.92rem; }
+.demo-content .setup__status { display: flex; flex-direction: column; gap: 0.7rem; }
+.demo-content .setup__line { font-family: var(--mono); font-size: 0.84rem; color: var(--ink-soft); }
+.demo-content .setup__line--ok { color: #4a6b3a; font-style: normal; }
+@media (prefers-color-scheme: dark) { .demo-content .setup__line--ok { color: #9ac07f; } }
+.demo-content .setup__bar { height: 9px; border-radius: 5px; background: var(--paper-deep); border: 1px solid var(--rule); overflow: hidden; }
+.demo-content .setup__fill { height: 100%; background: var(--accent); border-radius: 5px 0 0 5px; transition: width 120ms linear; }
+
+/* ---------- floating pill (interactive) ---------- */
+
+.pill-anchor {
+  position: absolute;
+  left: 50%;
+  bottom: -22px;
+  transform: translateX(-50%);
+  z-index: 5;
 }
 
 .pill {
   height: 44px;
+  min-width: 170px;
+  padding: 0 1rem;
   display: flex;
   align-items: center;
   justify-content: center;
   gap: 0.55rem;
   border-radius: 22px;
+  white-space: nowrap;
+  font-family: var(--serif);
+  box-shadow: 0 8px 24px var(--shadow-color);
   background: var(--paper);
   border: 1px solid var(--rule);
-  box-shadow: 0 8px 24px var(--shadow-color);
-  padding: 0 1rem;
-  white-space: nowrap;
+  cursor: pointer;
+  user-select: none;
+  transition: background 160ms ease, border-color 160ms ease;
 }
+.pill--idle {
+  background: color-mix(in srgb, var(--paper) 55%, transparent);
+  border: 1px dashed color-mix(in srgb, var(--rule) 90%, transparent);
+  box-shadow: none;
+}
+.pill--processing, .pill--injected, .pill--discarded, .pill--error { cursor: default; }
 
 .pill__dot {
   width: 10px;
@@ -410,6 +530,7 @@ kbd {
   border-radius: 50%;
   background: var(--accent);
   animation: breathe 1.5s ease-in-out infinite;
+  flex-shrink: 0;
 }
 
 @keyframes breathe {
@@ -417,15 +538,35 @@ kbd {
   50%      { transform: scale(1.45); opacity: 0.55; }
 }
 
-.pill__label {
-  font-size: 0.9rem;
+.pill__quill {
+  font-size: 0.95rem;
+  color: var(--ink-soft);
+  display: inline-block;
+  flex-shrink: 0;
+  animation: scribble 0.9s ease-in-out infinite;
+}
+
+@keyframes scribble {
+  0%, 100% { transform: rotate(-6deg) translateY(0); }
+  50%      { transform: rotate(8deg) translateY(-2px); }
+}
+
+.pill__label { font-size: 0.9rem; font-style: italic; color: var(--ink); overflow: hidden; text-overflow: ellipsis; max-width: 220px; }
+.pill--idle .pill__label { font-size: 0.8rem; font-style: normal; color: var(--ink-soft); }
+.pill--error .pill__label { color: var(--accent); font-style: normal; font-size: 0.8rem; }
+.pill--injected .pill__label, .pill--discarded .pill__label { color: var(--ink-soft); }
+
+.demo-caption {
+  margin-top: 2.8rem;
+  font-size: 0.82rem;
+  color: var(--ink-soft);
   font-style: italic;
-  color: var(--ink);
+  text-align: center;
+  max-width: 28rem;
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .pill-float, .pill__dot { animation: none; }
-  .book { transition: none; }
+  .pill__dot, .pill__quill { animation: none; }
 }
 
 /* ---------- section scaffolding ---------- */
@@ -772,7 +913,7 @@ footer {
   <!-- ============================== HERO ============================== -->
   <section class="stage">
     <div class="container hero">
-      <div>
+      <div class="hero__intro">
         <span class="label hero__eyebrow">100% on-device · macOS</span>
         <h1>suzune<span class="dot">.</span></h1>
         <p class="hero__tagline">Press a key, speak, get clean text in any app. Nothing ever leaves your machine.</p>
@@ -780,29 +921,29 @@ footer {
         <div class="hero__cta">
           <a class="btn btn--accent" href="https://github.com/francisreubenr-rvu/suzune" target="_blank" rel="noopener">View on GitHub</a>
           <div class="hero__hotkey">
-            hold <kbd>⌥</kbd> + <kbd>Space</kbd> to talk
+            hold <kbd>⌥</kbd> + <kbd>Space</kbd> to talk — try it below
           </div>
         </div>
 
         <p class="hero__note">Free, open-source, MIT. No account, no cloud, no subscription — the privacy claim is architectural, not a policy promise.</p>
       </div>
 
-      <div class="book-scene" id="bookScene">
-        <div class="pill-float">
-          <div class="pill">
-            <span class="pill__dot"></span>
-            <span class="pill__label">listening…</span>
+      <div class="demo-scene" id="demoScene">
+        <div class="demo-window" id="demoWindow">
+          <div class="demo-titlebar">
+            <span class="demo-dot demo-dot--red"></span>
+            <span class="demo-dot demo-dot--yellow"></span>
+            <span class="demo-dot demo-dot--green"></span>
+            <span class="demo-titlebar__title">suzune</span>
+          </div>
+          <div class="demo-content" id="demoContent"></div>
+        </div>
+        <div class="pill-anchor">
+          <div class="pill pill--idle" id="demoPill">
+            <span class="pill__label">Hold ⌥Space or click to talk</span>
           </div>
         </div>
-        <div class="book" id="book">
-          <div class="book__face book__back"></div>
-          <div class="book__face book__spine"></div>
-          <div class="book__face book__pages"></div>
-          <div class="book__face book__cover">
-            <div class="book__title">suzune<span class="dot">.</span></div>
-            <div class="book__sub">local voice dictation</div>
-          </div>
-        </div>
+        <p class="demo-caption">This is the real app, running in your browser. Grant microphone access below to try actual dictation — everything else works exactly like it does on macOS.</p>
       </div>
     </div>
   </section>
@@ -955,10 +1096,13 @@ footer {
 <script>
 /* ==========================================================================
    suzune landing page — vanilla JS behaviors
-   1. 3D book tilt on mouse move (hero)
-   2. Scroll-linked parallax on the background grid layer
-   3. IntersectionObserver-driven section reveals
-   4. Typewriter cleanup demo, staged on scroll, deletes filler words live
+   1. scroll-linked parallax on the background grid layer
+   2. IntersectionObserver-driven section reveals
+   3. typewriter cleanup demo, staged on scroll, deletes filler words live
+   4. interactive suzune demo (hero) — ported from the Claude Design
+      prototype (Suzune.dc.html), rewritten dependency-free to match this
+      page's existing vanilla-JS style instead of pulling in its generated
+      dc-runtime (support.js).
    All effects are skipped/simplified under prefers-reduced-motion.
    ========================================================================== */
 (function () {
@@ -966,26 +1110,7 @@ footer {
 
   var reduceMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
 
-  /* ---------- 1. 3D book tilt ---------- */
-  var book = document.getElementById("book");
-  var scene = document.getElementById("bookScene");
-
-  if (book && scene && !reduceMotion) {
-    var baseX = 8, baseY = -22;
-    scene.addEventListener("mousemove", function (e) {
-      var rect = scene.getBoundingClientRect();
-      var px = (e.clientX - rect.left) / rect.width;  // 0..1
-      var py = (e.clientY - rect.top) / rect.height;   // 0..1
-      var rotY = baseY + (px - 0.5) * 26;  // left/right tilt
-      var rotX = baseX - (py - 0.5) * 20;  // up/down tilt
-      book.style.transform = "rotateX(" + rotX.toFixed(2) + "deg) rotateY(" + rotY.toFixed(2) + "deg)";
-    });
-    scene.addEventListener("mouseleave", function () {
-      book.style.transform = "rotateX(" + baseX + "deg) rotateY(" + baseY + "deg)";
-    });
-  }
-
-  /* ---------- 2. scroll-linked grid parallax ---------- */
+  /* ---------- 1. scroll-linked grid parallax ---------- */
   var gridLayer = document.getElementById("gridLayer");
   if (gridLayer && !reduceMotion) {
     var ticking = false;
@@ -1000,7 +1125,7 @@ footer {
     }, { passive: true });
   }
 
-  /* ---------- 3. reveal-on-scroll ---------- */
+  /* ---------- 2. reveal-on-scroll ---------- */
   var revealEls = document.querySelectorAll(".reveal");
   if ("IntersectionObserver" in window && !reduceMotion) {
     var io = new IntersectionObserver(function (entries) {
@@ -1016,7 +1141,7 @@ footer {
     revealEls.forEach(function (el) { el.classList.add("is-visible"); });
   }
 
-  /* ---------- 4. typewriter cleanup demo ---------- */
+  /* ---------- 3. typewriter cleanup demo ---------- */
   var demoBox = document.getElementById("demoBox");
   var demoText = document.getElementById("demoText");
 
@@ -1104,6 +1229,673 @@ footer {
       runDemo();
     }
   }
+})();
+
+/* ==========================================================================
+   4. interactive suzune demo — a live, in-browser rendering of the actual
+   settings/setup/mic-gate screens (state/logic ported from
+   Suzune.dc.html's Component). Real microphone + SpeechRecognition are used
+   when the visitor grants access; canned phrases fill in otherwise.
+   ========================================================================== */
+(function () {
+  "use strict";
+
+  var contentEl = document.getElementById("demoContent");
+  var pillEl = document.getElementById("demoPill");
+  if (!contentEl || !pillEl) return;
+
+  var GRAMMAR_LEVELS = [
+    { value: "butler", label: "Butler", hint: "barely touches your words" },
+    { value: "casual", label: "Casual", hint: "light cleanup, keeps your voice" },
+    { value: "standard", label: "Standard", hint: "fixes grammar, keeps contractions" },
+    { value: "formal", label: "Formal", hint: "expands contractions, drops casual openers" },
+    { value: "oxford", label: "Oxford", hint: "maximally correct written English" }
+  ];
+  var TONES = [
+    { value: "neutral", label: "Neutral", hint: "no restyle, fastest" },
+    { value: "playful", label: "Playful", hint: "a little warmth and humor" },
+    { value: "enthusiastic", label: "Enthusiastic", hint: "upbeat energy" },
+    { value: "direct", label: "Direct", hint: "terse, strips hedging" },
+    { value: "dramatic", label: "Dramatic", hint: "maximum flair" }
+  ];
+  var DICTATION_SAMPLES = [
+    "um so basically I think we should move the meeting to Thursday",
+    "uh can you send me the the invoice from last week",
+    "so I was thinking maybe we launch this on friday instead",
+    "yeah lets just uh confirm the numbers before we send it out"
+  ];
+  var PROMPTER_SAMPLES = [
+    "um so basically build me a a login form with email and password validation",
+    "uh add a dark mode toggle to the settings page and uh persist it",
+    "so make the sidebar collapsible and remember the state"
+  ];
+  var SETUP_PHASES = [
+    { stage: "downloading", name: "Parakeet TDT 0.6B v2 (int8 ONNX)", dur: 1300 },
+    { stage: "downloading", name: "Silero VAD v4 (ONNX)", dur: 650 },
+    { stage: "downloading", name: "Qwen2.5-1.5B-Instruct (Q4 GGUF)", dur: 1500 },
+    { stage: "extracting", name: "Qwen2.5-1.5B-Instruct (Q4 GGUF)", dur: 600 },
+    { stage: "done", name: "", dur: 700 }
+  ];
+
+  var state = {
+    screen: "setup",
+    setupPhaseIdx: 0,
+    setupPct: 0,
+    micGranted: false,
+    micRequested: false,
+    settings: {
+      shortcut: "alt+space",
+      prompter_shortcut: "alt+shift+space",
+      push_to_talk: true,
+      injection_method: "clipboard",
+      input_device: null,
+      cleanup_enabled: true,
+      cleanup_model: "Qwen2.5-1.5B-Instruct-Q4_K_M.gguf",
+      grammar_level: "standard",
+      tone: "neutral",
+      personalization_enabled: false
+    },
+    savedSettings: null,
+    capturingField: null,
+    captureStuck: false,
+    status: null,
+    dictionary: {},
+    dictWrong: "",
+    dictRight: "",
+    devices: [],
+    history: [],
+    corrections: [],
+    fixingId: null,
+    fixText: "",
+    dictation: { state: "idle" }
+  };
+
+  var activeMode = null;
+  var finalTranscript = "";
+  var recognition = null;
+  var setupTimer = null;
+  var hideTimer = null;
+  var captureTimer = null;
+
+  function escapeHtml(s) {
+    return String(s).replace(/[&<>"']/g, function (c) {
+      return { "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c];
+    });
+  }
+
+  function patch(p) {
+    state.settings = Object.assign({}, state.settings, p);
+    state.status = null;
+    renderScreen();
+  }
+
+  /* ---- shortcuts ---- */
+
+  function shortcutFromEvent(e) {
+    var mods = [];
+    if (e.metaKey) mods.push("cmd");
+    if (e.ctrlKey) mods.push("ctrl");
+    if (e.altKey) mods.push("alt");
+    if (e.shiftKey) mods.push("shift");
+    var key = e.key;
+    if (["Meta", "Control", "Alt", "Shift"].indexOf(key) !== -1) return null;
+    var main = key === " " ? "space" : key.toLowerCase();
+    return mods.concat([main]).join("+");
+  }
+
+  function prettyShortcut(s) {
+    var map = { alt: "⌥", cmd: "⌘", "super": "⌘", ctrl: "⌃", shift: "⇧", space: "Space" };
+    return (s || "").split("+").map(function (p) { return map[p.toLowerCase()] || p.toUpperCase(); }).join(" ");
+  }
+
+  function toggleCapture(field) {
+    if (state.capturingField === field) { state.capturingField = null; renderScreen(); return; }
+    window.clearTimeout(captureTimer);
+    state.capturingField = field;
+    state.captureStuck = false;
+    captureTimer = window.setTimeout(function () { state.captureStuck = true; renderScreen(); }, 4000);
+    renderScreen();
+  }
+
+  /* ---- cleanup pass (ported verbatim from the prototype) ---- */
+
+  function cleanupText(raw, level, tone) {
+    var tokens = raw.trim().split(/\s+/);
+    var fillerAll = { um: 1, uh: 1, umm: 1, uhh: 1, erm: 1 };
+    var fillerExtra = { so: 1, like: 1, basically: 1, actually: 1, literally: 1, yeah: 1 };
+    var contractions = {
+      "i'm": "I am", "don't": "do not", "can't": "cannot", "won't": "will not", "it's": "it is",
+      "that's": "that is", "i've": "I have", "i'll": "I will", "let's": "let us", lets: "let us",
+      "didn't": "did not", "isn't": "is not", gonna: "going to", wanna: "want to", kinda: "kind of", sorta: "sort of"
+    };
+    var hedges = { maybe: 1, probably: 1, perhaps: 1, possibly: 1 };
+    var out = [];
+    var prevLower = "";
+    tokens.forEach(function (tok) {
+      var bare = tok.replace(/[.,!?]+$/, "");
+      var lower = bare.toLowerCase();
+      if (fillerAll[lower]) { prevLower = ""; return; }
+      if (level !== "butler" && fillerExtra[lower]) { prevLower = ""; return; }
+      if (lower === prevLower && (level === "formal" || level === "oxford" || level === "standard" || level === "casual")) { prevLower = lower; return; }
+      if ((level === "formal" || level === "oxford") && contractions[lower]) { out.push(contractions[lower]); prevLower = lower; return; }
+      if (level === "oxford" && (lower === "kinda" || lower === "sorta")) { out.push(contractions[lower]); prevLower = lower; return; }
+      out.push(tok);
+      prevLower = lower;
+    });
+    var filtered = out;
+    if (tone === "direct") filtered = out.filter(function (t) { return !hedges[t.toLowerCase().replace(/[.,!?]+$/, "")]; });
+    var text = filtered.join(" ").replace(/\s+/g, " ").trim();
+    if (!text) text = raw.trim();
+    text = text.replace(/\bi\b/g, "I");
+    text = text.charAt(0).toUpperCase() + text.slice(1);
+    var endPunct = tone === "dramatic" || tone === "enthusiastic" ? "!" : ".";
+    if (!/[.!?]$/.test(text)) text += endPunct;
+    return text;
+  }
+
+  /* ---- recording ---- */
+
+  function startRecording(mode) {
+    if (state.dictation.state !== "idle") return;
+    if (!state.micGranted) {
+      state.dictation = { state: "error", message: "Mic access needed — grant it above" };
+      renderPill();
+      window.clearTimeout(hideTimer);
+      hideTimer = window.setTimeout(function () { state.dictation = { state: "idle" }; renderPill(); }, 3800);
+      return;
+    }
+    activeMode = mode;
+    finalTranscript = "";
+    state.dictation = { state: "recording" };
+    renderPill();
+
+    var SR = window.SpeechRecognition || window.webkitSpeechRecognition;
+    recognition = null;
+    if (SR) {
+      try {
+        var rec = new SR();
+        rec.continuous = true;
+        rec.interimResults = false;
+        rec.lang = "en-US";
+        rec.onresult = function (ev) {
+          for (var i = ev.resultIndex; i < ev.results.length; i++) {
+            if (ev.results[i].isFinal) {
+              finalTranscript = (finalTranscript ? finalTranscript + " " : "") + ev.results[i][0].transcript;
+            }
+          }
+        };
+        rec.onerror = function () {};
+        rec.start();
+        recognition = rec;
+      } catch (e) { recognition = null; }
+    }
+  }
+
+  function cancelRecording() {
+    if (recognition) { try { recognition.stop(); } catch (e) {} }
+    recognition = null;
+    state.dictation = { state: "discarded" };
+    renderPill();
+    window.clearTimeout(hideTimer);
+    hideTimer = window.setTimeout(function () { state.dictation = { state: "idle" }; renderPill(); }, 1400);
+  }
+
+  function stopRecording() {
+    if (state.dictation.state !== "recording") return;
+    if (recognition) { try { recognition.stop(); } catch (e) {} }
+    window.setTimeout(finishRecording, 280);
+  }
+
+  function finishRecording() {
+    var mode = activeMode;
+    var raw = (finalTranscript || "").trim();
+    if (!raw) {
+      var samples = mode === "prompter" ? PROMPTER_SAMPLES : DICTATION_SAMPLES;
+      raw = samples[Math.floor(Math.random() * samples.length)];
+    }
+    state.dictation = { state: "processing" };
+    renderPill();
+    var delay = 450 + Math.random() * 350;
+    window.setTimeout(function () {
+      var level = mode === "prompter" ? "standard" : state.settings.grammar_level;
+      var tone = mode === "prompter" ? "neutral" : state.settings.tone;
+      var cleaned = cleanupText(raw, level, tone);
+      if (state.settings.personalization_enabled) {
+        state.history.push({ id: Date.now() + Math.random(), raw: raw, cleaned: cleaned, tone: tone });
+        if (state.screen === "settings") renderScreen();
+      }
+      state.dictation = { state: "injected", prompter: mode === "prompter" };
+      renderPill();
+      window.clearTimeout(hideTimer);
+      hideTimer = window.setTimeout(function () { state.dictation = { state: "idle" }; renderPill(); }, 1400);
+    }, delay);
+  }
+
+  /* ---- pill ---- */
+
+  function pillDown() {
+    if (state.dictation.state === "recording") { cancelRecording(); return; }
+    if (state.dictation.state !== "idle") return;
+    startRecording("dictation");
+  }
+  function pillUp() {
+    if (state.settings.push_to_talk && state.dictation.state === "recording" && activeMode === "dictation") {
+      stopRecording();
+    }
+  }
+
+  function renderPill() {
+    var s = state.dictation.state;
+    var label =
+      s === "recording" ? "listening" :
+      s === "processing" ? "writing" :
+      s === "injected" ? (state.dictation.prompter ? "prompt ready — copied" : "placed on the page") :
+      s === "discarded" ? "scratched" :
+      s === "error" ? state.dictation.message :
+      (state.settings.push_to_talk ? "Hold ⌥Space or click to talk" : "Press ⌥Space or click to talk");
+
+    pillEl.className = "pill pill--" + s;
+    var inner = "";
+    if (s === "recording") inner += '<span class="pill__dot"></span>';
+    if (s === "processing") inner += '<span class="pill__quill">✎</span>';
+    inner += '<span class="pill__label">' + escapeHtml(label) + "</span>";
+    pillEl.innerHTML = inner;
+  }
+
+  /* ---- screens ---- */
+
+  function renderSetupScreen() {
+    var phase = SETUP_PHASES[Math.min(state.setupPhaseIdx, SETUP_PHASES.length - 1)];
+    var stageLine = "";
+    if (phase.stage === "downloading") {
+      stageLine =
+        '<span class="setup__line">Downloading ' + escapeHtml(phase.name) + " — " + state.setupPct + '%</span>' +
+        '<div class="setup__bar"><div class="setup__fill" style="width:' + state.setupPct + '%"></div></div>';
+    } else if (phase.stage === "extracting") {
+      stageLine = '<span class="setup__line">Unpacking ' + escapeHtml(phase.name) + "...</span>";
+    } else {
+      stageLine = '<span class="setup__line setup__line--ok">Ready. suzune lives in your menu bar now.</span>';
+    }
+    contentEl.innerHTML =
+      '<div class="page__masthead"><h1>suzune</h1><p class="page__tagline">Setting up for first use.</p></div>' +
+      '<p class="setup__lede">suzune runs entirely on your Mac, so it needs to fetch its speech and cleanup models once. This happens now and never again.</p>' +
+      '<div class="setup__status">' + stageLine + "</div>";
+  }
+
+  function renderMicGateScreen() {
+    contentEl.innerHTML =
+      '<div class="page__masthead"><h1>suzune</h1><p class="page__tagline">One-time setup.</p></div>' +
+      '<p class="setup__lede">suzune transcribes speech entirely on this Mac. It needs permission to use your microphone before it can hear you.</p>' +
+      '<button class="seg seg--on" data-action="grant-mic" style="align-items:flex-start;width:100%;max-width:20rem">' +
+        "Grant Microphone Access" +
+        '<small>' + (state.micRequested ? "Waiting for you to respond to the browser prompt…" : "opens your browser's microphone permission prompt") + "</small>" +
+      "</button>";
+  }
+
+  function seg(active, dataAttrs, label, hint) {
+    return '<button class="seg' + (active ? " seg--on" : "") + '" ' + dataAttrs + ">" + escapeHtml(label) +
+      '<small>' + escapeHtml(hint) + "</small></button>";
+  }
+
+  function renderSettingsScreen() {
+    var s = state.settings;
+    var personalizationUnsaved = s.personalization_enabled && !(state.savedSettings && state.savedSettings.personalization_enabled);
+
+    var html = "";
+    html += '<div class="page__masthead"><h1>suzune</h1><p class="page__tagline">Local voice dictation. Nothing leaves your machine.</p></div>';
+
+    // Shortcuts
+    html += '<div class="page__section"><h2>Shortcuts</h2>';
+    html += '<p class="field__hint">Two separate hotkeys — which one you press decides the mode for that dictation, instead of a Settings toggle.</p>';
+    [["shortcut", "Dictation", "regular grammar + tone cleanup"], ["prompter_shortcut", "Prompter", "restructure into a Claude Code prompt"]].forEach(function (row) {
+      var field = row[0], label = row[1], hint = row[2];
+      var isCapturing = state.capturingField === field;
+      html += '<div class="field">' +
+        '<span class="field__label">' + label + "</span>" +
+        '<button class="capture' + (isCapturing ? " capture--active" : "") + '" data-action="toggle-capture" data-field="' + field + '">' +
+          (isCapturing ? "Press a key combination…" : escapeHtml(prettyShortcut(s[field]))) +
+        "</button>" +
+        '<span class="field__hint">' + (isCapturing ? "Listening — press your keys, or Esc to cancel" : escapeHtml(hint)) + "</span>";
+      if (isCapturing && state.captureStuck) {
+        html += '<span class="field__hint field__hint--warn">Still nothing? Some key combinations are already claimed by macOS itself or another app — try a different combination, or press Esc to cancel.</span>';
+      }
+      html += "</div>";
+    });
+    html += "</div>";
+
+    // Mode
+    html += '<div class="page__section"><h2>Mode</h2><div class="segmented">';
+    html += seg(s.push_to_talk, 'data-action="set-mode" data-value="true"', "Push to talk", "hold the key, release to type");
+    html += seg(!s.push_to_talk, 'data-action="set-mode" data-value="false"', "Continuous", "press once to start, again to stop");
+    html += "</div></div>";
+
+    // Text placement
+    html += '<div class="page__section"><h2>Text placement</h2><div class="field">' +
+      '<select data-action="set-injection">' +
+        '<option value="clipboard"' + (s.injection_method === "clipboard" ? " selected" : "") + '>Paste (works everywhere)</option>' +
+        '<option value="ax"' + (s.injection_method === "ax" ? " selected" : "") + '>Accessibility insert (no clipboard, some apps unsupported)</option>' +
+        '<option value="type"' + (s.injection_method === "type" ? " selected" : "") + '>Simulated typing (slow)</option>' +
+      "</select>" +
+      '<span class="field__hint">Paste is the reliable default, including terminals and chat apps.</span></div></div>';
+
+    // Microphone
+    html += '<div class="page__section"><h2>Microphone</h2><div class="field"><select data-action="set-device">' +
+      '<option value=""' + (!s.input_device ? " selected" : "") + ">System default</option>";
+    state.devices.forEach(function (d) {
+      html += '<option value="' + escapeHtml(d) + '"' + (s.input_device === d ? " selected" : "") + ">" + escapeHtml(d) + "</option>";
+    });
+    html += "</select><span class=\"field__hint\">Pin a device so macOS Continuity does not hand the mic to a nearby iPhone.</span></div></div>";
+
+    // Dictionary
+    html += '<div class="page__section"><h2>Dictionary</h2>' +
+      '<p class="field__hint">Words the ASR engine consistently mishears — e.g. "clawed" should be "Claude". Applies every time, before cleanup.</p>' +
+      '<div class="field field--row">' +
+        '<input type="text" id="dictWrongInput" placeholder="misheard as..." value="' + escapeHtml(state.dictWrong) + '">' +
+        '<span class="field__arrow">→</span>' +
+        '<input type="text" id="dictRightInput" placeholder="should be..." value="' + escapeHtml(state.dictRight) + '">' +
+        '<button class="link-btn" id="addDictBtn" data-action="add-dict"' + (!state.dictWrong.trim() || !state.dictRight.trim() ? " disabled" : "") + ">Add</button>" +
+      "</div>";
+    var dictEntries = Object.keys(state.dictionary);
+    if (dictEntries.length) {
+      html += '<div class="corrections-list">';
+      dictEntries.forEach(function (wrong) {
+        html += '<div class="corrections-list__item"><span>"' + escapeHtml(wrong) + '" → "' + escapeHtml(state.dictionary[wrong]) + '"</span>' +
+          '<button class="link-btn" data-action="remove-dict" data-wrong="' + escapeHtml(wrong) + '">Remove</button></div>';
+      });
+      html += "</div>";
+    }
+    html += "</div>";
+
+    // Cleanup
+    html += '<div class="page__section"><h2>Cleanup</h2><label class="toggle">' +
+      '<input type="checkbox" data-action="toggle-cleanup"' + (s.cleanup_enabled ? " checked" : "") + ">" +
+      "<span>Tidy up transcripts with the local model (" + s.cleanup_model.replace(/\.gguf$/, "") + ")</span></label></div>";
+
+    // Grammar
+    html += '<div class="page__section"><h2>Grammar strictness</h2><p class="field__hint">Applies to the Dictation shortcut. The Prompter shortcut has its own fixed style.</p><div class="segmented">';
+    GRAMMAR_LEVELS.forEach(function (g) {
+      html += seg(s.grammar_level === g.value, 'data-action="set-grammar" data-value="' + g.value + '"', g.label, g.hint);
+    });
+    html += "</div></div>";
+
+    // Tone
+    html += '<div class="page__section"><h2>Tone</h2><p class="field__hint">Applies to the Dictation shortcut only.</p><div class="segmented">';
+    TONES.forEach(function (t) {
+      html += seg(s.tone === t.value, 'data-action="set-tone" data-value="' + t.value + '"', t.label, t.hint);
+    });
+    html += "</div></div>";
+
+    // History & personalization
+    html += '<div class="page__section"><h2>History &amp; personalization</h2><label class="toggle">' +
+      '<input type="checkbox" data-action="toggle-personalization"' + (s.personalization_enabled ? " checked" : "") + ">" +
+      "<span>Remember recent dictations so you can fix mistakes, and let suzune learn your corrections over time. " +
+      "Off by default — nothing is stored unless you actually correct something, it never leaves your machine, and you can clear it anytime below.</span></label>";
+
+    if (s.personalization_enabled) {
+      html += '<div style="margin-top:1rem">';
+      if (personalizationUnsaved) {
+        html += '<p class="field__hint field__hint--warn">Click "Save changes" below to activate — nothing is recorded until saved.</p>';
+      }
+      html += '<h3 class="page__subhead">Recent dictations</h3>';
+      if (state.history.length) {
+        html += '<div class="history-list">';
+        state.history.slice().reverse().forEach(function (h) {
+          html += '<div class="history-item"><div class="history-item__text">' + escapeHtml(h.cleaned) + "</div>";
+          if (state.fixingId === h.id) {
+            html += '<div class="history-item__fix"><textarea id="fixTextArea" rows="2">' + escapeHtml(state.fixText) + "</textarea>" +
+              '<div class="history-item__actions">' +
+                '<button class="link-btn" data-action="submit-fix" data-id="' + h.id + '"' +
+                  (state.fixText.trim() === "" || state.fixText.trim() === h.cleaned.trim() ? " disabled" : "") + ">Save correction</button>" +
+                '<button class="link-btn" data-action="cancel-fix">Cancel</button>' +
+              "</div></div>";
+          } else {
+            html += '<div class="history-item__actions"><button class="link-btn" data-action="start-fix" data-id="' + h.id + '">Fix this</button></div>';
+          }
+          html += "</div>";
+        });
+        html += "</div>";
+      } else {
+        html += '<p class="history-empty">Nothing yet — hold your dictation hotkey (or click the pill below) and talk, and it will show up here.</p>';
+      }
+
+      html += '<h3 class="page__subhead">Your corrections (' + state.corrections.length + ")</h3>";
+      if (state.corrections.length) {
+        html += '<div class="corrections-list">';
+        state.corrections.slice().reverse().forEach(function (c) {
+          html += '<div class="corrections-list__item"><span>"' + escapeHtml(c.cleaned) + '" → "' + escapeHtml(c.corrected) + '"</span></div>';
+        });
+        html += "</div>";
+        html += '<button class="danger" data-action="clear-corrections">Clear all corrections</button>';
+      } else {
+        html += '<p class="history-empty">No corrections saved yet.</p>';
+      }
+      html += "</div>";
+    }
+    html += "</div>";
+
+    // footer
+    html += '<div class="page__actions"><button class="save" data-action="save">Save changes</button>';
+    if (state.status) {
+      html += '<span class="status status--' + state.status.kind + '">' + escapeHtml(state.status.msg) + "</span>";
+    }
+    html += "</div>";
+
+    contentEl.innerHTML = html;
+
+    // Wire text inputs without losing focus on keystrokes: 'input' listeners
+    // mutate state directly and only touch dependent nodes imperatively,
+    // instead of triggering a full re-render (which would recreate the
+    // <input> node and drop focus/cursor position mid-keystroke).
+    var wrongInput = document.getElementById("dictWrongInput");
+    var rightInput = document.getElementById("dictRightInput");
+    var addBtn = document.getElementById("addDictBtn");
+    if (wrongInput && rightInput && addBtn) {
+      wrongInput.addEventListener("input", function (e) {
+        state.dictWrong = e.target.value;
+        addBtn.disabled = !state.dictWrong.trim() || !state.dictRight.trim();
+      });
+      rightInput.addEventListener("input", function (e) {
+        state.dictRight = e.target.value;
+        addBtn.disabled = !state.dictWrong.trim() || !state.dictRight.trim();
+      });
+      wrongInput.addEventListener("keydown", function (e) { if (e.key === "Enter") addDictEntry(); });
+      rightInput.addEventListener("keydown", function (e) { if (e.key === "Enter") addDictEntry(); });
+    }
+    var fixArea = document.getElementById("fixTextArea");
+    if (fixArea) {
+      fixArea.addEventListener("input", function (e) {
+        state.fixText = e.target.value;
+        var submitBtn = contentEl.querySelector('[data-action="submit-fix"]');
+        if (submitBtn) {
+          var entry = state.history.find(function (h) { return h.id === state.fixingId; });
+          submitBtn.disabled = state.fixText.trim() === "" || (entry && state.fixText.trim() === entry.cleaned.trim());
+        }
+      });
+    }
+  }
+
+  function renderScreen() {
+    if (state.screen === "setup") renderSetupScreen();
+    else if (state.screen === "mic-gate") renderMicGateScreen();
+    else renderSettingsScreen();
+  }
+
+  /* ---- actions ---- */
+
+  function addDictEntry() {
+    var wrong = state.dictWrong.trim();
+    var right = state.dictRight.trim();
+    if (!wrong || !right) return;
+    state.dictionary[wrong] = right;
+    state.dictWrong = "";
+    state.dictRight = "";
+    renderScreen();
+  }
+
+  function grantMic() {
+    state.micRequested = true;
+    renderScreen();
+    navigator.mediaDevices.getUserMedia({ audio: true }).then(function (stream) {
+      stream.getTracks().forEach(function (t) { t.stop(); });
+      state.micGranted = true;
+      state.screen = "settings";
+      renderScreen();
+      if (navigator.mediaDevices.enumerateDevices) {
+        navigator.mediaDevices.enumerateDevices().then(function (list) {
+          state.devices = list.filter(function (d) { return d.kind === "audioinput" && d.label; }).map(function (d) { return d.label; });
+          if (state.screen === "settings") renderScreen();
+        }).catch(function () {});
+      }
+    }).catch(function () {
+      state.micRequested = false;
+      renderScreen();
+    });
+  }
+
+  function save() {
+    state.savedSettings = Object.assign({}, state.settings);
+    state.status = { kind: "ok", msg: "Saved. Changes are live." };
+    renderScreen();
+  }
+
+  contentEl.addEventListener("click", function (e) {
+    var el = e.target.closest("[data-action]");
+    if (!el) return;
+    var action = el.getAttribute("data-action");
+    if (action === "grant-mic") grantMic();
+    else if (action === "toggle-capture") toggleCapture(el.getAttribute("data-field"));
+    else if (action === "set-mode") patch({ push_to_talk: el.getAttribute("data-value") === "true" });
+    else if (action === "set-grammar") patch({ grammar_level: el.getAttribute("data-value") });
+    else if (action === "set-tone") patch({ tone: el.getAttribute("data-value") });
+    else if (action === "add-dict") addDictEntry();
+    else if (action === "remove-dict") { delete state.dictionary[el.getAttribute("data-wrong")]; renderScreen(); }
+    else if (action === "start-fix") {
+      var id = Number(el.getAttribute("data-id"));
+      var entry = state.history.find(function (h) { return h.id === id; });
+      if (entry) { state.fixingId = id; state.fixText = entry.cleaned; renderScreen(); }
+    }
+    else if (action === "cancel-fix") { state.fixingId = null; state.fixText = ""; renderScreen(); }
+    else if (action === "submit-fix") {
+      var fixId = Number(el.getAttribute("data-id"));
+      var e2 = state.history.find(function (h) { return h.id === fixId; });
+      var trimmed = state.fixText.trim();
+      if (e2 && trimmed && trimmed !== e2.cleaned.trim()) {
+        state.corrections.push({ cleaned: e2.cleaned, corrected: trimmed });
+      }
+      state.fixingId = null;
+      state.fixText = "";
+      renderScreen();
+    }
+    else if (action === "clear-corrections") { state.corrections = []; renderScreen(); }
+    else if (action === "save") save();
+  });
+
+  contentEl.addEventListener("change", function (e) {
+    if (e.target.matches('[data-action="set-injection"]')) patch({ injection_method: e.target.value });
+    else if (e.target.matches('[data-action="set-device"]')) patch({ input_device: e.target.value || null });
+    else if (e.target.matches('[data-action="toggle-cleanup"]')) patch({ cleanup_enabled: e.target.checked });
+    else if (e.target.matches('[data-action="toggle-personalization"]')) patch({ personalization_enabled: e.target.checked });
+  });
+
+  /* ---- global keyboard: shortcut capture + hotkey-to-talk ---- */
+
+  window.addEventListener("keydown", function (e) {
+    if (state.capturingField) {
+      if (e.key === "Escape") { e.preventDefault(); state.capturingField = null; renderScreen(); return; }
+      var sc = shortcutFromEvent(e);
+      if (!sc) return;
+      e.preventDefault();
+      var field = state.capturingField;
+      var other = field === "shortcut" ? state.settings.prompter_shortcut : state.settings.shortcut;
+      if (sc.toLowerCase() === (other || "").toLowerCase()) {
+        state.status = { kind: "err", msg: "Dictation and Prompter shortcuts must be different" };
+        state.capturingField = null;
+        renderScreen();
+        return;
+      }
+      state.settings[field] = sc;
+      state.capturingField = null;
+      renderScreen();
+      return;
+    }
+    var tag = (document.activeElement && document.activeElement.tagName) || "";
+    if (tag === "INPUT" || tag === "TEXTAREA" || tag === "SELECT") return;
+    if (e.code !== "Space" || !e.altKey) return;
+    if (e.repeat) { e.preventDefault(); return; }
+    e.preventDefault();
+    var mode = e.shiftKey ? "prompter" : "dictation";
+    if (state.settings.push_to_talk) {
+      startRecording(mode);
+    } else if (state.dictation.state === "idle") {
+      startRecording(mode);
+    } else if (state.dictation.state === "recording" && activeMode === mode) {
+      stopRecording();
+    }
+  });
+
+  window.addEventListener("keyup", function (e) {
+    if (state.capturingField) return;
+    if (!state.settings.push_to_talk) return;
+    if ((e.code === "Space" || e.key === "Alt") && state.dictation.state === "recording") {
+      stopRecording();
+    }
+  });
+
+  pillEl.addEventListener("mousedown", pillDown);
+  pillEl.addEventListener("mouseup", pillUp);
+  pillEl.addEventListener("mouseleave", pillUp);
+
+  /* ---- setup sequence ---- */
+
+  function runSetupSequence() {
+    state.screen = "setup";
+    state.setupPhaseIdx = 0;
+    state.setupPct = 0;
+    renderScreen();
+    var idx = 0;
+    var phaseStart = Date.now();
+    setupTimer = window.setInterval(function () {
+      var phase = SETUP_PHASES[idx];
+      var elapsed = Date.now() - phaseStart;
+      if (elapsed >= phase.dur) {
+        idx++;
+        phaseStart = Date.now();
+        if (idx >= SETUP_PHASES.length) {
+          window.clearInterval(setupTimer);
+          window.setTimeout(afterSetup, 250);
+          return;
+        }
+        state.setupPhaseIdx = idx;
+        state.setupPct = 0;
+      } else {
+        state.setupPct = Math.min(100, Math.round((elapsed / phase.dur) * 100));
+      }
+      renderScreen();
+    }, 60);
+  }
+
+  function afterSetup() {
+    if (navigator.permissions && navigator.permissions.query) {
+      navigator.permissions.query({ name: "microphone" }).then(function (status) {
+        if (status.state === "granted") {
+          state.micGranted = true;
+          state.screen = "settings";
+        } else {
+          state.screen = "mic-gate";
+        }
+        renderScreen();
+      }).catch(function () {
+        state.screen = "mic-gate";
+        renderScreen();
+      });
+    } else {
+      state.screen = "mic-gate";
+      renderScreen();
+    }
+  }
+
+  renderPill();
+  runSetupSequence();
 })();
 </script>
 
