@@ -320,6 +320,69 @@ kbd {
   .demo-content { padding: 1.6rem 1.4rem; max-height: 420px; }
 }
 
+/* ---------- demo output editor (where dictated text appears) ---------- */
+
+.demo-editor {
+  margin-bottom: 1.5rem;
+  background: var(--paper);
+  border: 1px solid var(--rule);
+  border-radius: 8px;
+  overflow: hidden;
+}
+.demo-editor__head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0.4rem 0.8rem;
+  background: var(--paper-deep);
+  border-bottom: 1px solid var(--rule);
+  font-family: var(--mono);
+  font-size: 0.68rem;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--ink-soft);
+}
+.demo-editor__clear {
+  font-family: var(--mono);
+  font-size: 0.64rem;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--ink-soft);
+  background: none;
+  border: 1px solid var(--rule);
+  border-radius: 4px;
+  padding: 0.1rem 0.5rem;
+  cursor: pointer;
+}
+.demo-editor__clear:hover { color: var(--accent); border-color: var(--accent); }
+.demo-editor__body {
+  padding: 0.8rem 0.9rem;
+  min-height: 3.4rem;
+  max-height: 8rem;
+  overflow-y: auto;
+  font-family: var(--serif);
+  font-size: 1.05rem;
+  line-height: 1.6;
+  color: var(--ink);
+  white-space: pre-wrap;
+  word-break: break-word;
+}
+.demo-editor__body--empty { color: var(--ink-soft); font-style: italic; font-size: 0.95rem; }
+.demo-editor__raw {
+  margin-top: 0.45rem;
+  padding-top: 0.45rem;
+  border-top: 1px dashed var(--rule);
+  font-size: 0.85rem;
+  color: var(--ink-soft);
+}
+.demo-editor__raw-label {
+  font-family: var(--mono);
+  font-size: 0.62rem;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  margin-bottom: 0.15rem;
+}
+
 .demo-content h1 { font-size: 2rem; font-weight: 600; letter-spacing: 0.01em; }
 .demo-content .page__masthead { border-bottom: 3px double var(--rule); padding-bottom: 1rem; margin-bottom: 1.5rem; }
 .demo-content .page__tagline { color: var(--ink-soft); font-style: italic; margin-top: 0.2rem; font-size: 0.92rem; }
@@ -1307,7 +1370,9 @@ footer {
     corrections: [],
     fixingId: null,
     fixText: "",
-    dictation: { state: "idle" }
+    dictation: { state: "idle" },
+    lastResult: "",
+    lastResultRaw: ""
   };
 
   var activeMode = null;
@@ -1465,6 +1530,9 @@ footer {
         if (state.screen === "settings") renderScreen();
       }
       state.dictation = { state: "injected", prompter: mode === "prompter" };
+      state.lastResult = cleaned;
+      state.lastResultRaw = raw;
+      if (state.screen === "settings") renderScreen();
       renderPill();
       window.clearTimeout(hideTimer);
       hideTimer = window.setTimeout(function () { state.dictation = { state: "idle" }; renderPill(); }, 1400);
@@ -1543,6 +1611,19 @@ footer {
 
     var html = "";
     html += '<div class="page__masthead"><h1>suzune</h1><p class="page__tagline">Local voice dictation. Nothing leaves your machine.</p></div>';
+
+    // Output editor — where dictated text lands
+    html += '<div class="demo-editor">';
+    html += '<div class="demo-editor__head"><span>Live output</span><button class="demo-editor__clear" data-action="clear-result">Clear</button></div>';
+    if (state.lastResult) {
+      html += '<div class="demo-editor__body">' + escapeHtml(state.lastResult) + '</div>';
+      if (state.lastResultRaw && state.lastResultRaw !== state.lastResult) {
+        html += '<div class="demo-editor__raw"><div class="demo-editor__raw-label">Raw transcript</div>' + escapeHtml(state.lastResultRaw) + '</div>';
+      }
+    } else {
+      html += '<div class="demo-editor__body demo-editor__body--empty">Your dictated text will appear here. Try it — click the pill below, speak, and release.</div>';
+    }
+    html += "</div>";
 
     // Shortcuts
     html += '<div class="page__section"><h2>Shortcuts</h2>';
@@ -1769,6 +1850,7 @@ footer {
     else if (action === "set-tone") patch({ tone: el.getAttribute("data-value") });
     else if (action === "add-dict") addDictEntry();
     else if (action === "remove-dict") { delete state.dictionary[el.getAttribute("data-wrong")]; renderScreen(); }
+    else if (action === "clear-result") { state.lastResult = ""; state.lastResultRaw = ""; renderScreen(); }
     else if (action === "start-fix") {
       var id = Number(el.getAttribute("data-id"));
       var entry = state.history.find(function (h) { return h.id === id; });
